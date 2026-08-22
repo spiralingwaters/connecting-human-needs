@@ -18,7 +18,11 @@
     <button type="button" id="clearBtn" class="tool-btn">Clear</button>
   </div>
 
-  <canvas id="idCanvas" width="480" height="480"></canvas>
+  <canvas id="idCanvas" width="1200" height="1200"></canvas>
+  <div>
+    <button type="button" id="downloadBtn" class="tool-btn">Download my ID</button>
+  </div>
+  <a id="downloadLink" download="my-id.png" style="display:none;"></a>
 {% endblock %}
 
 {% block scripts %}
@@ -29,17 +33,21 @@
     let erasing = false;
     let drawing = false;
 
+    // Template coordinates are proportional to canvas size, so a higher-
+    // resolution canvas keeps the same layout as the on-screen display.
+    const scale = canvas.width / 480;
+
     function drawTemplate() {
       ctx.save();
       ctx.strokeStyle = '#c9c5b8';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2 * scale;
       // Face square, upper portion.
-      ctx.strokeRect(140, 40, 200, 200);
+      ctx.strokeRect(140 * scale, 40 * scale, 200 * scale, 200 * scale);
       // Dotted name line, lower third.
-      ctx.setLineDash([6, 6]);
+      ctx.setLineDash([6 * scale, 6 * scale]);
       ctx.beginPath();
-      ctx.moveTo(40, 400);
-      ctx.lineTo(440, 400);
+      ctx.moveTo(40 * scale, 400 * scale);
+      ctx.lineTo(440 * scale, 400 * scale);
       ctx.stroke();
       ctx.restore();
     }
@@ -70,7 +78,7 @@
     canvas.addEventListener('pointermove', (e) => {
       if (!drawing) return;
       const p = pointerPos(e);
-      ctx.lineWidth = erasing ? 18 : 4;
+      ctx.lineWidth = (erasing ? 18 : 4) * scale;
       ctx.lineCap = 'round';
       ctx.strokeStyle = erasing ? '#ffffff' : activeColor;
       ctx.lineTo(p.x, p.y);
@@ -99,6 +107,12 @@
     });
 
     document.getElementById('clearBtn').addEventListener('click', resetCanvas);
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const link = document.getElementById('downloadLink');
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
 
     resetCanvas();
   </script>
