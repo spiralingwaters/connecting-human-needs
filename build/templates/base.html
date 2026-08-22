@@ -14,6 +14,7 @@
       {% if current_user %}
         logged in as <strong>{{ current_user.username }}</strong>
         <a href="{{ url_for('notes') }}">My notes</a>
+        <a href="{{ url_for('messages') }}">Messages</a>
         <a href="{{ url_for('notifications') }}">Notifications{% if unread_notifications %} ({{ unread_notifications }}){% endif %}</a>
         <form class="logout-form" method="post" action="{{ url_for('logout') }}">
           <button type="submit" class="link-button">Log out</button>

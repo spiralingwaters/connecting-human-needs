@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}{{ other_username }} — Connecting Human Needs{% endblock %}
+
+{% block content %}
+  <h1 class="profile-username">{{ other_username }}</h1>
+  <div class="stream">
+    {% for msg in history %}
+      <article class="post">
+        <div class="post-meta">{{ msg.sender }} &middot; {{ msg.created_at }}</div>
+        <div class="post-body">{{ msg.body }}</div>
+      </article>
+    {% else %}
+      <p class="placeholder">No messages yet.</p>
+    {% endfor %}
+  </div>
+  <form class="compose-form" method="post" action="{{ url_for('thread', thread_id=thread_id) }}">
+    <label for="body">Message</label>
+    <textarea id="body" name="body" required maxlength="2000" rows="3"></textarea>
+    <button type="submit">Send</button>
+  </form>
+  <p><a href="{{ url_for('new_note') }}">Send a gift note</a></p>
+{% endblock %}

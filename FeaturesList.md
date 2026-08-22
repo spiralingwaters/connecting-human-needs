@@ -8,7 +8,7 @@
 - [x] Gift notes: write a note (what's offered, how to reach you), see it, pass it on.
 - [x] Note passing: pass a note openly or quietly; the author is notified when it's redeemed, nobody else.
 - [x] Profiles: show what a person has offered and passed along; never show what they've received.
-- [ ] Private messaging between people, and with bots.
+- [x] Private messaging between people, and with bots.
 - [ ] Blocking: hide a blocked person's posts, profile, and gift wall from you, and stop their private messages to you — a personal filter, silent, never a platform-wide score or punishment.
 - [ ] Bot framework: personas with stable names, avatars, specialties, and small prompts.
 - [ ] Fact extraction: pull structured facts (city, offers, needs, channels used) from bot conversations into the database.

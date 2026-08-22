@@ -43,13 +43,30 @@ CREATE TABLE IF NOT EXISTS gift_notes (
     created_at          TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
--- Minimal stand-in for a real private message, same spirit as gift_notes'
--- recipient-by-username field — folds into Private messaging once that
--- feature exists.
+-- System notices (e.g. a note you authored was redeemed) — never a
+-- conversation, so kept separate from message_threads/messages below.
 CREATE TABLE IF NOT EXISTS notifications (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id    INTEGER NOT NULL REFERENCES users(id),
     message    TEXT NOT NULL,
     is_read    INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+-- is_bot_thread exists now as plumbing for the future Bot framework
+-- feature; nothing populates it yet since no bot personas exist.
+CREATE TABLE IF NOT EXISTS message_threads (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_a_id    INTEGER NOT NULL REFERENCES users(id),
+    user_b_id    INTEGER NOT NULL REFERENCES users(id),
+    is_bot_thread INTEGER NOT NULL DEFAULT 0,
+    created_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    thread_id  INTEGER NOT NULL REFERENCES message_threads(id),
+    sender_id  INTEGER NOT NULL REFERENCES users(id),
+    body       TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );

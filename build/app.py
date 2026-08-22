@@ -109,6 +109,110 @@ def search():
     )
 
 
+def find_or_create_thread(db, user_a_id, user_b_id):
+    thread = db.execute(
+        """
+        SELECT id FROM message_threads
+        WHERE (user_a_id = ? AND user_b_id = ?)
+           OR (user_a_id = ? AND user_b_id = ?)
+        """,
+        (user_a_id, user_b_id, user_b_id, user_a_id),
+    ).fetchone()
+    if thread is not None:
+        return thread["id"]
+    cur = db.execute(
+        "INSERT INTO message_threads (user_a_id, user_b_id) VALUES (?, ?)",
+        (user_a_id, user_b_id),
+    )
+    return cur.lastrowid
+
+
+def thread_other_user(thread, my_id):
+    return thread["user_b_id"] if thread["user_a_id"] == my_id else thread["user_a_id"]
+
+
+@app.route("/messages")
+def messages():
+    user = current_user()
+    if user is None:
+        return redirect(url_for("login"))
+    db = get_db()
+    threads = db.execute(
+        """
+        SELECT message_threads.id, message_threads.user_a_id, message_threads.user_b_id,
+               message_threads.is_bot_thread
+        FROM message_threads
+        WHERE user_a_id = ? OR user_b_id = ?
+        ORDER BY id DESC
+        """,
+        (user["id"], user["id"]),
+    ).fetchall()
+    people = []
+    bots = []
+    for t in threads:
+        other_id = thread_other_user(t, user["id"])
+        other = db.execute(
+            "SELECT username FROM users WHERE id = ?", (other_id,)
+        ).fetchone()
+        entry = {"id": t["id"], "other_username": other["username"] if other else "?"}
+        (bots if t["is_bot_thread"] else people).append(entry)
+    return render_template("messages.html", people=people, bots=bots)
+
+
+@app.route("/messages/new", methods=["GET", "POST"])
+def new_thread():
+    user = current_user()
+    if user is None:
+        return redirect(url_for("login"))
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        db = get_db()
+        other = db.execute(
+            "SELECT id FROM users WHERE username = ?", (username,)
+        ).fetchone()
+        if other is None:
+            return render_template("new_thread.html", error="No user with that username.")
+        thread_id = find_or_create_thread(db, user["id"], other["id"])
+        db.commit()
+        return redirect(url_for("thread", thread_id=thread_id))
+    return render_template("new_thread.html")
+
+
+@app.route("/messages/<int:thread_id>", methods=["GET", "POST"])
+def thread(thread_id):
+    user = current_user()
+    if user is None:
+        return redirect(url_for("login"))
+    db = get_db()
+    t = db.execute(
+        "SELECT * FROM message_threads WHERE id = ?", (thread_id,)
+    ).fetchone()
+    if t is None or user["id"] not in (t["user_a_id"], t["user_b_id"]):
+        return redirect(url_for("messages"))
+    if request.method == "POST":
+        body = request.form.get("body", "").strip()
+        if body:
+            db.execute(
+                "INSERT INTO messages (thread_id, sender_id, body) VALUES (?, ?, ?)",
+                (thread_id, user["id"], body),
+            )
+            db.commit()
+        return redirect(url_for("thread", thread_id=thread_id))
+    other_id = thread_other_user(t, user["id"])
+    other = db.execute("SELECT username FROM users WHERE id = ?", (other_id,)).fetchone()
+    history = db.execute(
+        """
+        SELECT messages.body, messages.created_at, users.username AS sender
+        FROM messages JOIN users ON users.id = messages.sender_id
+        WHERE thread_id = ? ORDER BY messages.id ASC
+        """,
+        (thread_id,),
+    ).fetchall()
+    return render_template(
+        "thread.html", thread_id=thread_id, other_username=other["username"], history=history
+    )
+
+
 @app.route("/u/<username>")
 def profile(username):
     db = get_db()
@@ -239,6 +343,11 @@ def pass_note(note_id):
         db.execute(
             "UPDATE gift_notes SET current_holder_id = ? WHERE id = ?",
             (recipient["id"], note_id),
+        )
+        thread_id = find_or_create_thread(db, user["id"], recipient["id"])
+        db.execute(
+            "INSERT INTO messages (thread_id, sender_id, body) VALUES (?, ?, ?)",
+            (thread_id, user["id"], f'Passed you a gift note: "{note["title"]}"'),
         )
         db.commit()
     return redirect(url_for("notes"))
@@ -377,6 +486,11 @@ def new_note():
             VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '+30 days'))
             """,
             (title, description, contact_info, user["id"], recipient["id"]),
+        )
+        thread_id = find_or_create_thread(db, user["id"], recipient["id"])
+        db.execute(
+            "INSERT INTO messages (thread_id, sender_id, body) VALUES (?, ?, ?)",
+            (thread_id, user["id"], f'Sent you a gift note: "{title}"'),
         )
         db.commit()
         return redirect(url_for("notes"))

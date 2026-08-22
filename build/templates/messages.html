@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Messages — Connecting Human Needs{% endblock %}
+
+{% block content %}
+  <a class="compose-link" href="{{ url_for('new_thread') }}">Start a conversation</a>
+
+  <h2 class="tier-label">People</h2>
+  <div class="stream">
+    {% for t in people %}
+      <article class="post">
+        <a href="{{ url_for('thread', thread_id=t.id) }}">{{ t.other_username }}</a>
+      </article>
+    {% else %}
+      <p class="placeholder">No conversations yet.</p>
+    {% endfor %}
+  </div>
+
+  <h2 class="tier-label">Bots</h2>
+  <div class="stream">
+    {% for t in bots %}
+      <article class="post">
+        <a href="{{ url_for('thread', thread_id=t.id) }}">{{ t.other_username }}</a>
+      </article>
+    {% else %}
+      <p class="placeholder">No bot conversations yet.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

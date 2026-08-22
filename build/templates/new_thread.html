@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Start a conversation — Connecting Human Needs{% endblock %}
+
+{% block content %}
+  {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
+  <form class="compose-form" method="post" action="{{ url_for('new_thread') }}">
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username" required maxlength="40">
+    <button type="submit">Start</button>
+  </form>
+{% endblock %}
