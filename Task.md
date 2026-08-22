@@ -22,6 +22,7 @@ Build the flat, chronological stream from SiteShape.md: one column, newest-to-ol
 - Added `/new` route (GET form, POST insert) + template.
 - Added styling for the stream, compose link, and compose form.
 - Verified with a scripted test-client run: seed post renders, `/new` form loads, posting inserts and redirects, new post appears before the seed post (newest-first), empty submissions are rejected without creating a post.
+- Restyled the site header per feedback: near-zero padding, site title set in italic Cormorant Garamond (Google Fonts) — elegant/important-looking but small and quiet enough to ignore.
 
 ## Details
 

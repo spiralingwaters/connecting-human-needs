@@ -17,15 +17,25 @@ body {
 }
 
 .site-header {
-  padding: 1rem 1.5rem;
+  padding: 0.15rem 1.5rem;
+  line-height: 1;
   border-bottom: 1px solid #e4e2da;
 }
 
 .site-title {
+  display: inline-block;
+  font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  font-style: italic;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1.35rem;
+  letter-spacing: 0.01em;
   color: var(--accent);
+  opacity: 0.82;
   text-decoration: none;
+}
+
+.site-title:hover {
+  opacity: 1;
 }
 
 main {
