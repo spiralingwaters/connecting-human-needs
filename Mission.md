@@ -40,6 +40,13 @@ Nothing built here may harm anyone. That outranks everything else written above.
 - **The database is the memory, not the context window.** Personas load a handful of structured facts ("has couch, Portland, uses Craigslist") plus a few lines of who they are. Overlap-finding is plain database work and word matching, which costs nothing.
 - **Honest about being coordinated.** No staged coincidences — a bot says plainly "someone here is giving away a couch in your city, here's the link." The delight survives being found out.
 
+### How We Build
+
+- **KISS, built in from the start** — simplicity in appearance, mechanics, and logistics, kept in every piece rather than cleaned up later.
+- Each piece is planned until it **works**, then gone over again until it works **simply** and is easily understandable, then checked that it actually serves the feature and the mission.
+- **PNG authorization is deferred until much later.** The whole platform is built with authorization in mind but not implemented, so the identity chain slots in without rework.
+- **Shape before code**: how the site looks and feels, what sections exist, how people interact or don't, and what the bots' roles and cadence actually are, get planned before they get built.
+
 ### Hard Privacy Rules
 
 - Bots may read what was said **to bots**. Never human-to-human conversations.
