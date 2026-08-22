@@ -15,14 +15,15 @@ Right now `index.html` puts a full search form and a "New post" link inline at t
 
 ## To Do
 
-- Update `build/static/style.css`: add fixed/sticky positioning + compact styling for the new top search bar and bottom compose bar; add `main` padding to clear both.
-- Update `build/templates/base.html` and/or `index.html`: move the search form into a fixed top bar (present on every page, or just index? — leaning toward every page via `base.html` so search is always reachable, matching "search bar... always tethered to the top of the screen"), and add the fixed bottom compose form to `base.html`, gated on `current_user`.
-- Remove the old inline `.search-form` and `.compose-link` markup from `index.html` once superseded by the fixed bars.
-- Decide and implement the fate of the standalone `/new` GET page (redirect to `/` vs. keep as fallback).
-- Manually test: logged-in posting from the bottom bar, logged-out view (no bottom bar), search from the top bar, scrolling a long stream to confirm no content is hidden under either bar, narrow-viewport layout.
-- Update `FeaturesList.md` (check off) and move `Task.md` to `History/0024_...md` once done and confirmed by the user.
+- Get the user (lunchz) to manually try it: log in, post from the bottom bar, scroll a long stream, search from the top bar, check on a narrow viewport.
+- Once confirmed: check off in `FeaturesList.md` and move `Task.md` to `History/0024_tethered_post_search_bar.md`.
 
 ## Done
+
+- Added a fixed top search bar (`.topbar-search` in `base.html`, site-wide, reuses existing `/search` GET) and a fixed bottom compose bar (`.composebar` in `base.html`, gated on `current_user`, posts to existing `/new` POST endpoint).
+- Removed the old inline search form and "New post" link from `index.html`; the standalone `/new` GET page now redirects to `/` (its `new_post.html` template deleted) since the bottom bar covers composing everywhere.
+- Added `main` padding (`.has-composebar`) and bar styling (compact, rounded, sticky/fixed) in `style.css` so the stream never hides behind either bar.
+- Automated check (Flask `test_client`, no browser available in this environment): logged-out view shows the top bar and no bottom bar; logged-in view shows both; posting via the bottom bar inserts the post and it shows up in the stream and in search results; `GET /new` now 302-redirects instead of rendering a page. All passed.
 
 ## Details
 

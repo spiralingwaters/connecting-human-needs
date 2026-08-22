@@ -844,7 +844,7 @@ def new_post():
             )
             db.commit()
         return redirect(url_for("index"))
-    return render_template("new_post.html")
+    return redirect(url_for("index"))
 
 
 if __name__ == "__main__":
