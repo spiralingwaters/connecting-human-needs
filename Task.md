@@ -1,27 +1,24 @@
 # Feature Summary
 
-- [ ] Fact extraction: pull structured facts (city, offers, needs, channels used) from bot conversations into the database.
+- [ ] Overlap engine: plain database matching to find who has what someone else needs, and whether they're reachable to each other.
 
 ## Description
 
-Build the structured-facts store bot conversations feed into, per Mission.md ("the database is the memory, not the context window... personas load a handful of structured facts"). Real extraction eventually needs language understanding, but no LLM is wired up yet (deliberate scope decision carried from Bot framework/Welcome bot). This task builds the honest, currently-available version: a simple rule-based extractor (keyword/regex patterns) that scans a human's messages *sent to a bot thread* (never human-to-human threads — Mission.md's hard privacy rule) for a few recognizable shapes: "I have/offer <thing>", "I need/looking for <thing>", "I'm in <city>", and a contact channel mention (an email-looking string, or "reach me on X"). This is clearly a heuristic stand-in, documented as such, matching this project's established pattern (Placeholder identity, notifications, Bot framework's templated replies) of building a working simple version now and swapping in the real thing later without needing to redesign the schema.
+Build the plain-SQL matching Mission.md describes explicitly as non-LLM work ("Overlap-finding is plain database work and word matching, which costs nothing"). Using the `user_facts` table Fact extraction populates, find pairs where one person's `needs` fact text overlaps (word-level) with another person's `offers` fact text — a simple word-overlap score, no embeddings, no external service. "Whether they're reachable to each other" just means: both users have to actually exist and not have blocked one another (reuse the `blocks` table from Blocking) — there's no location/proximity data yet (deferred since Public feed), so reachability here is purely "not blocked," not a distance check.
 
-- DB: `user_facts` table — id, user_id, key (`'city'`, `'offers'`, `'needs'`, `'channel'`), value (free text), source_thread_id (→ message_threads), created_at. A user can have multiple facts of the same key (e.g. several separate offers).
-- Extraction runs at the moment a message is inserted into a **bot thread** by the human side (in `thread()`'s POST handler, only when `message_threads.is_bot_thread` is true and the sender isn't the bot) — simple pattern matching against the message body, inserting any facts it recognizes. No batch job, no background worker — KISS, extraction happens inline with the request that creates the message.
-- Never runs against person-to-person threads — enforced by checking `is_bot_thread` before extracting, matching Mission.md's "bots never read human-to-human conversations."
-- No UI surface required for this task beyond what's needed to verify it worked (facts existing in the DB) — Overlap engine (next) is what actually reads and uses `user_facts`.
-- Out of scope: any real NLP/LLM-based extraction — flagged as a known simplification to revisit once an LLM decision is made (see Bot framework's Details).
+- A pure function/query, no new schema needed: `find_overlaps(db, user_id)` — for a given user's `needs` facts, scan every other user's `offers` facts, score by shared significant words (lowercased, simple stopword-free word-set intersection), return matches above a small threshold (at least one shared word), best-scoring first, excluding any pair where either has blocked the other.
+- This task builds the engine and a way to see it work (a small `/overlaps` page for a logged-in user showing their current candidate matches, read-only) — it does **not** send anything to anyone. Reaching out is explicitly Coordinator bots' job next; this task only finds and displays candidates.
+- Keep the scoring dead simple and explainable: split both fact values into lowercase word sets (dropping a short stopword list: a, an, the, to, for, and, of, in, i, need, needs, looking, have, offer, offering — the verb/filler words the extraction patterns themselves tend to capture), count shared words, require at least 1.
 
 ## To Do
 
-## Done
+- Add `find_overlaps(db, user_id)` to app.py: joins the user's `needs` facts against other users' `offers` facts, scores by shared-word count, filters out blocked pairs, orders best-first.
+- Add `/overlaps` route (logged-in only) + template: lists candidate matches (the other user's username + the matching offer text + the searching need text).
+- Verify with a scripted test-client run: a user whose stated need shares words with another's stated offer shows up as a match; a pair with no shared words doesn't; a blocked pair is excluded even if their words would otherwise match; a match only requires one shared word (not exact phrase equality).
 
-- Added `user_facts` table to schema.sql.
-- Added `extract_facts(body)`: regex/keyword rules for offers, needs, city, channel — returns a list of (key, value) pairs found.
-- Wired it into `thread()`'s POST handler: runs only when the thread `is_bot_thread`, inserting any facts found tagged with `source_thread_id`.
-- Verified with a scripted test-client run: a message with offer/city/channel shapes produces the expected facts in a bot thread, the identical message in a human-to-human thread produces none, and ordinary chat with no recognizable shape produces no false positives.
+## Done
 
 ## Details
 
-- Heuristic, not real NLP — a known, documented simplification (same category as Search's plain-LIKE ranking and Bot framework's no-LLM-yet choice). Revisit once a real language model is wired in.
-- Enforcing "bot threads only" here is also the first concrete piece of the later Privacy enforcement feature, though that feature will need to audit this more thoroughly across the whole app, not just this one insertion point.
+- Deliberately plain word-overlap, not any embedding/semantic similarity — matches Mission.md's explicit "costs nothing" framing for this piece.
+- Location/proximity weighting from SiteShape.md ("Weighs candidates near the original giver") isn't available yet (no geolocation data exists) — this task only builds the word-overlap half; proximity weighting is a follow-up once location data exists, flagged rather than silently skipped.
