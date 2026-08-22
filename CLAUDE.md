@@ -7,6 +7,12 @@ If any GitHub write action (creating a branch, pushing, opening a PR, changing r
 
 Respond to each prompt as concisely as you can with a short list of very concise numbered bullet points explaining the most important parts of the response, and offering to go into more detail on any of the numbered points, so the user can just press one or more numbers to hear more about those parts of the response.
 
+# REPOSITORY LAYOUT
+
+The repo root holds planning and process only — `Mission.md`, `FeaturesList.md`, `Task.md`, `CLAUDE.md`, `SiteShape.md`, `Thoughts/`, `History/`, `artifacts/` (the dashboard and file browser). None of it ships.
+
+`build/` holds the actual website: server code, templates/static files, and the database (file or schema + migrations) — everything needed to run and serve the site. The stack has no compile step (server-rendered HTML, no bundler), so `build/` is the literal source tree, not a generated output folder built from some separate `src/`.
+
 # BEGINNING A NEW SESSION
 
 Start each session by looking at these files in this order:
