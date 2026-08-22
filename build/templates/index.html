@@ -18,7 +18,11 @@
         </article>
       {% else %}
         <article class="post">
-          <div class="post-meta"><a href="{{ url_for('profile', username=post.author_name) }}">{{ post.author_name }}</a> &middot; {{ post.created_at }}</div>
+          <div class="post-meta">
+            {% set av = avatar_url(post.author_name) %}
+            {% if av %}<img class="avatar avatar-sm" src="{{ av }}" alt="">{% else %}<span class="avatar avatar-sm avatar-placeholder"></span>{% endif %}
+            <a href="{{ url_for('profile', username=post.author_name) }}">{{ post.author_name }}</a> &middot; {{ post.created_at }}
+          </div>
           <div class="post-body">{{ post.body }}</div>
         </article>
       {% endif %}

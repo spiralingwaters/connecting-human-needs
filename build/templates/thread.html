@@ -7,7 +7,11 @@
   <div class="stream">
     {% for msg in history %}
       <article class="post">
-        <div class="post-meta">{{ msg.sender }} &middot; {{ msg.created_at }}</div>
+        <div class="post-meta">
+          {% set av = avatar_url(msg.sender) %}
+          {% if av %}<img class="avatar avatar-sm" src="{{ av }}" alt="">{% else %}<span class="avatar avatar-sm avatar-placeholder"></span>{% endif %}
+          {{ msg.sender }} &middot; {{ msg.created_at }}
+        </div>
         <div class="post-body">{{ msg.body }}</div>
       </article>
     {% else %}

@@ -6,7 +6,15 @@
   {% if not profile_user %}
     <p class="placeholder">No such user: {{ username }}</p>
   {% else %}
-    <h1 class="profile-username">{{ profile_user.username }}{% if profile_user.is_bot %} <span class="bot-label">bot</span>{% endif %}</h1>
+    <h1 class="profile-username">
+      {% set av = avatar_url(profile_user.username) %}
+      {% if av %}
+        <img class="avatar avatar-lg" src="{{ av }}" alt="">
+      {% else %}
+        <span class="avatar avatar-lg avatar-placeholder"></span>
+      {% endif %}
+      {{ profile_user.username }}{% if profile_user.is_bot %} <span class="bot-label">bot</span>{% endif %}
+    </h1>
 
     {% if can_block %}
       {% if blocked %}

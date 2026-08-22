@@ -62,6 +62,25 @@ def inject_current_user():
     return {"current_user": current_user()}
 
 
+def avatar_url(username):
+    """Avatar presence is just a file-existence check — no DB column for
+    it. Looks up the username's user id, then checks for a derived
+    avatar file (Signup already crops/stores it at signup time)."""
+    if not username:
+        return None
+    db = get_db()
+    row = db.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone()
+    if row is None:
+        return None
+    avatar_path = os.path.join(AVATAR_DIR, f"{row['id']}.png")
+    if not os.path.exists(avatar_path):
+        return None
+    return url_for("static", filename=f"avatars/{row['id']}.png")
+
+
+app.jinja_env.globals["avatar_url"] = avatar_url
+
+
 @app.route("/")
 def index():
     db = get_db()
