@@ -6,7 +6,7 @@
 - [x] Public feed: post, read, and reply in the open.
 - [x] Search: find stream posts by keyword. Tentative ranking plan (tiered by term match, newest-first within each tier) in SiteShape.md "Open for later tasks" — still not finalized.
 - [x] Gift notes: write a note (what's offered, how to reach you), see it, pass it on.
-- [ ] Note passing: pass a note openly or quietly; the author is notified when it's redeemed, nobody else.
+- [x] Note passing: pass a note openly or quietly; the author is notified when it's redeemed, nobody else.
 - [ ] Profiles: show what a person has offered and passed along; never show what they've received.
 - [ ] Private messaging between people, and with bots.
 - [ ] Blocking: hide a blocked person's posts, profile, and gift wall from you, and stop their private messages to you — a personal filter, silent, never a platform-wide score or punishment.

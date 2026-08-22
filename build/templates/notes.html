@@ -11,9 +11,33 @@
         <h3 class="note-title">{{ note.title }}</h3>
         <div class="post-body">{{ note.description }}</div>
         <div class="note-contact">Contact: {{ note.contact_info }}</div>
+        <div class="note-actions-row">
+          <form class="pass-form" method="post" action="{{ url_for('pass_note', note_id=note.id) }}">
+            <input type="text" name="recipient" placeholder="pass to username" required maxlength="40">
+            <button type="submit">Pass</button>
+          </form>
+          <form method="post" action="{{ url_for('redeem_note', note_id=note.id) }}">
+            <button type="submit">Redeem</button>
+          </form>
+        </div>
       </article>
     {% else %}
       <p class="placeholder">You aren't holding any gift notes.</p>
     {% endfor %}
   </div>
+
+  {% if sent_expired %}
+    <h2 class="tier-label">Your expired notes</h2>
+    <div class="stream">
+      {% for note in sent_expired %}
+        <article class="post">
+          <h3 class="note-title">{{ note.title }}</h3>
+          <form class="pass-form" method="post" action="{{ url_for('renew_note', note_id=note.id) }}">
+            <input type="text" name="recipient" placeholder="renew to username" required maxlength="40">
+            <button type="submit">Renew</button>
+          </form>
+        </article>
+      {% endfor %}
+    </div>
+  {% endif %}
 {% endblock %}

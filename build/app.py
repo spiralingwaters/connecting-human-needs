@@ -73,7 +73,7 @@ def index():
     ).fetchone()
     tagline = row["value"] if row else ""
     posts = db.execute(
-        "SELECT author_name, body, created_at FROM posts ORDER BY id DESC"
+        "SELECT author_name, body, kind, created_at FROM posts ORDER BY id DESC"
     ).fetchall()
     return render_template("index.html", tagline=tagline, posts=posts)
 
@@ -156,17 +156,165 @@ def notes():
     db = get_db()
     held = db.execute(
         """
-        SELECT gift_notes.title, gift_notes.description, gift_notes.contact_info,
-               gift_notes.expires_at, users.username AS original_author
+        SELECT gift_notes.id, gift_notes.title, gift_notes.description,
+               gift_notes.contact_info, gift_notes.expires_at,
+               users.username AS original_author
         FROM gift_notes
         JOIN users ON users.id = gift_notes.original_author_id
         WHERE gift_notes.current_holder_id = ?
+          AND gift_notes.redeemed_at IS NULL
           AND gift_notes.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
         ORDER BY gift_notes.id DESC
         """,
         (user["id"],),
     ).fetchall()
-    return render_template("notes.html", held=held)
+    sent_expired = db.execute(
+        """
+        SELECT gift_notes.id, gift_notes.title
+        FROM gift_notes
+        WHERE gift_notes.original_author_id = ?
+          AND gift_notes.redeemed_at IS NULL
+          AND gift_notes.expires_at <= strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        ORDER BY gift_notes.id DESC
+        """,
+        (user["id"],),
+    ).fetchall()
+    return render_template("notes.html", held=held, sent_expired=sent_expired)
+
+
+def _note_owned_by(db, note_id, user_id):
+    return db.execute(
+        "SELECT * FROM gift_notes WHERE id = ? AND current_holder_id = ?"
+        " AND redeemed_at IS NULL",
+        (note_id, user_id),
+    ).fetchone()
+
+
+@app.route("/notes/<int:note_id>/pass", methods=["POST"])
+def pass_note(note_id):
+    user = current_user()
+    if user is None:
+        return redirect(url_for("login"))
+    db = get_db()
+    note = _note_owned_by(db, note_id, user["id"])
+    if note is None:
+        return redirect(url_for("notes"))
+    recipient_username = request.form.get("recipient", "").strip()
+    recipient = db.execute(
+        "SELECT id FROM users WHERE username = ?", (recipient_username,)
+    ).fetchone()
+    if recipient is not None:
+        db.execute(
+            "UPDATE gift_notes SET current_holder_id = ? WHERE id = ?",
+            (recipient["id"], note_id),
+        )
+        db.commit()
+    return redirect(url_for("notes"))
+
+
+@app.route("/notes/<int:note_id>/redeem", methods=["POST"])
+def redeem_note(note_id):
+    user = current_user()
+    if user is None:
+        return redirect(url_for("login"))
+    db = get_db()
+    note = _note_owned_by(db, note_id, user["id"])
+    if note is None:
+        return redirect(url_for("notes"))
+    author = db.execute(
+        "SELECT username FROM users WHERE id = ?", (note["original_author_id"],)
+    ).fetchone()
+    db.execute(
+        "UPDATE gift_notes SET redeemed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?",
+        (note_id,),
+    )
+    db.execute(
+        "INSERT INTO posts (author_name, author_id, body, kind) VALUES (?, ?, ?, 'redemption')",
+        (author["username"], note["original_author_id"], note["title"]),
+    )
+    db.execute(
+        "INSERT INTO notifications (user_id, message) VALUES (?, ?)",
+        (
+            note["original_author_id"],
+            f'Your gift note "{note["title"]}" was redeemed by {user["username"]}.',
+        ),
+    )
+    db.commit()
+    return redirect(url_for("notes"))
+
+
+@app.route("/notes/<int:note_id>/renew", methods=["POST"])
+def renew_note(note_id):
+    user = current_user()
+    if user is None:
+        return redirect(url_for("login"))
+    db = get_db()
+    note = db.execute(
+        """
+        SELECT * FROM gift_notes
+        WHERE id = ? AND original_author_id = ? AND redeemed_at IS NULL
+          AND expires_at <= strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        """,
+        (note_id, user["id"]),
+    ).fetchone()
+    if note is None:
+        return redirect(url_for("notes"))
+    recipient_username = request.form.get("recipient", "").strip()
+    recipient = db.execute(
+        "SELECT id FROM users WHERE username = ?", (recipient_username,)
+    ).fetchone()
+    if recipient is not None:
+        db.execute(
+            """
+            INSERT INTO gift_notes
+                (title, description, contact_info, original_author_id,
+                 current_holder_id, expires_at)
+            VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '+30 days'))
+            """,
+            (
+                note["title"],
+                note["description"],
+                note["contact_info"],
+                user["id"],
+                recipient["id"],
+            ),
+        )
+        db.commit()
+    return redirect(url_for("notes"))
+
+
+@app.route("/notifications")
+def notifications():
+    user = current_user()
+    if user is None:
+        return redirect(url_for("login"))
+    db = get_db()
+    items = db.execute(
+        "SELECT message, created_at FROM notifications WHERE user_id = ? ORDER BY id DESC",
+        (user["id"],),
+    ).fetchall()
+    db.execute(
+        "UPDATE notifications SET is_read = 1 WHERE user_id = ?", (user["id"],)
+    )
+    db.commit()
+    return render_template("notifications.html", items=items)
+
+
+def unread_notification_count():
+    user = current_user()
+    if user is None:
+        return 0
+    db = get_db()
+    row = db.execute(
+        "SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND is_read = 0",
+        (user["id"],),
+    ).fetchone()
+    return row["n"]
+
+
+@app.context_processor
+def inject_unread_count():
+    return {"unread_notifications": unread_notification_count()}
 
 
 @app.route("/notes/new", methods=["GET", "POST"])

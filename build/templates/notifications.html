@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications — Connecting Human Needs{% endblock %}
+
+{% block content %}
+  <div class="stream">
+    {% for item in items %}
+      <article class="post">
+        <div class="post-meta">{{ item.created_at }}</div>
+        <div class="post-body">{{ item.message }}</div>
+      </article>
+    {% else %}
+      <p class="placeholder">No notifications yet.</p>
+    {% endfor %}
+  </div>
+{% endblock %}
