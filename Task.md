@@ -1,25 +1,25 @@
 # Feature Summary
 
-- [ ] Coordinator bots: reach out with a concrete match and a concrete next step.
+- [ ] Offsite routing: help a giver post somewhere real and point the receiver at it.
 
 ## Description
 
-Close the loop the Overlap engine opened: instead of only showing candidates on a page someone has to check, a bot proactively messages a person when a concrete overlap exists, per Mission.md ("Honest about being coordinated... no staged coincidences — a bot says plainly 'someone here is giving away a couch in your city, here's the link'"). The message is templated text (not live-LLM-generated, consistent with every other bot behavior built so far) that plainly states what was matched and a concrete next step: go start a conversation with that person. This task triggers on the same event Fact extraction already hooks: right after a `needs` fact is extracted from a message in a bot thread, immediately run the Overlap engine for that user and, for any new match found, have the bot send a follow-up message in that same bot thread naming the match and linking to `/messages/new` (or directly proposes starting a thread with that username).
+Per Mission.md ("Heavy things get routed offsite. The site holds no inventory and handles no logistics; it learns enough about two people to say 'go here, look now'"), this is assistance, not automation: the site cannot actually post to Craigslist or any third-party service on a user's behalf (no API integration is in scope, and fabricating one would misrepresent what the site does). What it *can* honestly do: help the giver produce good copy-paste-ready listing text from a gift note they've already written, and give the holder a real, working link to go look somewhere external. No geolocation exists yet (deferred since Public feed), so the "somewhere real" link is a generic external search — not a city-specific one — clearly labeled as such rather than pretending to be localized.
 
-- No new schema for the match itself, but avoid re-notifying about the same pair repeatedly: add a small `coordinator_notices` table (user_id, matched_username, offer_value, created_at) recording what's already been surfaced, so the same offer isn't re-announced to the same person every time they send another message.
-- After fact extraction inserts a `needs` fact, call `find_overlaps` for that user; for each match not already recorded in `coordinator_notices` (matched on user_id + matched_username + offer_value), have the bot post a message in the same bot thread: "Someone here is offering '<offer>' — that sounds like what you're after. Want to reach out? Start a conversation with @<username>." Then record it.
-- This only fires from a *human* message being posted to a *bot thread* that yields a new `needs` fact and at least one match — never a background job, matching the project's inline/no-worker pattern established by Fact extraction.
-- Out of scope: actually initiating a thread on the user's behalf (SiteShape.md keeps "reaches out" as the bot's own private message, but the actual person-to-person conversation still needs the human to choose to start it) — the bot's job is the concrete pointer, not doing the introduction on its own authority beyond that message.
+- On the held-note view (`/notes`), for each held note, add a "Get posting text" action: renders (no new route needed for viewing — a simple inline `<details>`/expand block populated server-side is enough) a copy-paste-ready listing built from the note's title/description/contact — this is for the *original author* to use if they want to also list the item somewhere with real reach (a local Craigslist/Facebook Marketplace/Freecycle post), not something the site submits anywhere itself.
+- On the same held-note view, add a "Look elsewhere too" link per note: a real, working URL to Craigslist's free-stuff search for the note's title (e.g. `https://www.craigslist.org/search/zip?query=<title>&sort=date` scoped to the "free" category via their search params) — since there's no user location yet, this omits a specific city (Craigslist's own site handles the "pick your region" step) rather than guessing one.
+- This is entirely presentational — no new DB table, no new route beyond what's needed to render the two pieces on the existing `/notes` page.
+- Being explicit about what this is *not*: not an integration, not an auto-post, not proof anything was actually listed anywhere. The copy-paste text is a convenience; the link is a real starting point, nothing more.
 
 ## To Do
 
-## Done
+- Build the copy-paste listing text (title + description + contact, formatted as plain text) directly in `notes.html`'s Jinja template for the holder's own view — no server-side change needed since it's simple string composition of fields already passed to the template. (If composition needs to be non-trivial, do it in the `notes()` view instead of the template.)
+- Add a real Craigslist free-search link per note using the note's title as the query, with a plain-text caveat that it's not a personalized/city-specific search since location isn't available yet.
+- Verify with a scripted test-client run: `/notes` renders both the listing text block and the search link for each held note without erroring, and the link URL is well-formed (contains the note's title, URL-encoded).
 
-- Added `coordinator_notices` table to schema.sql.
-- After fact extraction in `thread()`'s POST handler, when a new `needs` fact was recorded, runs `find_overlaps` and sends a follow-up bot message (in the same thread) for each match not already in `coordinator_notices`; records each one sent.
-- Verified with a scripted test-client run: a matching need produces both the extracted fact and a coordinator follow-up naming the offering username, a repeat similar need doesn't re-send the same notice, an unmatched need produces no follow-up.
+## Done
 
 ## Details
 
-- Templated, not live-LLM-generated — same choice made throughout the bot features so far (Bot framework, Welcome bot).
-- This task deliberately only fires on new `needs` facts, not new `offers` facts — matching the other direction (telling an existing offerer about a newly-arrived need) is a reasonable future enhancement but doubles the surface area and isn't required by the feature's wording ("reach out with a concrete match"), so it's left for later rather than silently expanded here.
+- No external API call, no scraping, no claim of automation — this is copy/paste assistance plus a real link, matching what the site can honestly do without an integration decision (which, like the LLM question, is an infrastructure/API choice left for later, not guessed at here).
+- Revisit once geolocation exists (Public feed's deferred proximity data) to make the external link city-specific.
