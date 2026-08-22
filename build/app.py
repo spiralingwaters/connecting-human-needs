@@ -148,6 +148,61 @@ def login():
     return render_template("login.html")
 
 
+@app.route("/notes")
+def notes():
+    user = current_user()
+    if user is None:
+        return redirect(url_for("login"))
+    db = get_db()
+    held = db.execute(
+        """
+        SELECT gift_notes.title, gift_notes.description, gift_notes.contact_info,
+               gift_notes.expires_at, users.username AS original_author
+        FROM gift_notes
+        JOIN users ON users.id = gift_notes.original_author_id
+        WHERE gift_notes.current_holder_id = ?
+          AND gift_notes.expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        ORDER BY gift_notes.id DESC
+        """,
+        (user["id"],),
+    ).fetchall()
+    return render_template("notes.html", held=held)
+
+
+@app.route("/notes/new", methods=["GET", "POST"])
+def new_note():
+    user = current_user()
+    if user is None:
+        return redirect(url_for("login"))
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        description = request.form.get("description", "").strip()
+        contact_info = request.form.get("contact_info", "").strip()
+        recipient_username = request.form.get("recipient", "").strip()
+        if not (title and description and contact_info and recipient_username):
+            return render_template("new_note.html", error="Fill in every field.")
+        db = get_db()
+        recipient = db.execute(
+            "SELECT id FROM users WHERE username = ?", (recipient_username,)
+        ).fetchone()
+        if recipient is None:
+            return render_template(
+                "new_note.html", error="No user with that username."
+            )
+        db.execute(
+            """
+            INSERT INTO gift_notes
+                (title, description, contact_info, original_author_id,
+                 current_holder_id, expires_at)
+            VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '+30 days'))
+            """,
+            (title, description, contact_info, user["id"], recipient["id"]),
+        )
+        db.commit()
+        return redirect(url_for("notes"))
+    return render_template("new_note.html")
+
+
 @app.route("/logout", methods=["POST"])
 def logout():
     session.pop("user_id", None)

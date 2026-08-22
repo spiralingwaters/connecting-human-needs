@@ -13,6 +13,7 @@
     <span class="auth-status">
       {% if current_user %}
         logged in as <strong>{{ current_user.username }}</strong>
+        <a href="{{ url_for('notes') }}">My notes</a>
         <form class="logout-form" method="post" action="{{ url_for('logout') }}">
           <button type="submit" class="link-button">Log out</button>
         </form>

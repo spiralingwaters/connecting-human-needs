@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Write a gift note — Connecting Human Needs{% endblock %}
+
+{% block content %}
+  {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
+  <form class="compose-form" method="post" action="{{ url_for('new_note') }}">
+    <label for="title">Title</label>
+    <input type="text" id="title" name="title" required maxlength="120">
+    <label for="description">What you're offering</label>
+    <textarea id="description" name="description" required maxlength="1000" rows="4"></textarea>
+    <label for="contact_info">How to reach you</label>
+    <input type="text" id="contact_info" name="contact_info" required maxlength="200">
+    <label for="recipient">Send to (username)</label>
+    <input type="text" id="recipient" name="recipient" required maxlength="40">
+    <button type="submit">Send note</button>
+  </form>
+{% endblock %}

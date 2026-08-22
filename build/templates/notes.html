@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Held notes — Connecting Human Needs{% endblock %}
+
+{% block content %}
+  <a class="compose-link" href="{{ url_for('new_note') }}">Write a gift note</a>
+  <div class="stream">
+    {% for note in held %}
+      <article class="post gift-note">
+        <div class="post-meta">from {{ note.original_author }} &middot; expires {{ note.expires_at[:10] }}</div>
+        <h3 class="note-title">{{ note.title }}</h3>
+        <div class="post-body">{{ note.description }}</div>
+        <div class="note-contact">Contact: {{ note.contact_info }}</div>
+      </article>
+    {% else %}
+      <p class="placeholder">You aren't holding any gift notes.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

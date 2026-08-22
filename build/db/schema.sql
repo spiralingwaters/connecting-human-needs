@@ -26,3 +26,16 @@ CREATE TABLE IF NOT EXISTS posts (
     body        TEXT NOT NULL,
     created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
+
+-- A gift note: authored + held only for now (SiteShape.md steps 1-2).
+-- Passing/redeeming/expiring further are Note passing's job.
+CREATE TABLE IF NOT EXISTS gift_notes (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    title               TEXT NOT NULL,
+    description         TEXT NOT NULL,
+    contact_info        TEXT NOT NULL,
+    original_author_id  INTEGER NOT NULL REFERENCES users(id),
+    current_holder_id   INTEGER NOT NULL REFERENCES users(id),
+    expires_at          TEXT NOT NULL,
+    created_at          TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
