@@ -1,25 +1,24 @@
 # Feature Summary
 
-- [ ] Avatar derivation: crop the face square down to a small clean avatar and store it.
+- [ ] Login: upload the PNG, hash it, match it, start a session.
 
 ## Description
 
-Signup already derives and saves a small avatar file (`build/static/avatars/<user_id>.png`, a 96×96 crop of the face-square region) as a technical necessity of never persisting the raw uploaded image — but nothing displays it anywhere yet, matching SiteShape.md's note that avatar display was "deferred until the PNG identity feature lands." That feature has now landed, so this task's job is specifically the display wiring: show the avatar on `/u/<username>` (profile header, next to the username) and in the stream/thread views next to a post/message author's name, falling back to a plain placeholder circle for accounts with no avatar file (bots, and any account created before this feature existed).
+Replace `/login`'s temporary "being rebuilt" stub (left in place during Signup) with the real flow: upload the PNG file you downloaded at signup, the server hashes the raw bytes the same way Signup did, looks for a matching `users.image_hash`, and starts a session on a match. This completes the identity chain and fully retires Placeholder identity's key-paste login — matching Mission.md's "no recovery, by design" property, since the uploaded file's hash either matches exactly or it doesn't (no partial credit, no password reset).
 
-- `/u/<username>`: show the avatar image (if `build/static/avatars/<id>.png` exists) beside the username in the profile header; a plain gray circle placeholder otherwise.
-- Stream (`index.html`) and thread (`thread.html`): show a small avatar thumbnail next to each post/message's author name, same fallback rule.
-- No new DB column needed — avatar presence is just "does `static/avatars/<id>.png` exist," checked at render time (a user's `id` is already available everywhere a template needs this).
-- Keep this presentational only: no new route, no re-cropping logic (that's already correct from Signup) — just `<img>` tags with a sensible fallback.
+- `/login` GET: a plain file upload form (`<input type="file" accept="image/png">` + submit), replacing the old key-paste field and the "being rebuilt" placeholder message.
+- `/login` POST: reads the uploaded file's raw bytes (never persisted, same rule as Signup), computes `sha256`, looks up `users` by `image_hash`; on a match, starts the session (`session["user_id"]`) and redirects to `/`; on no match, shows a plain "not recognized" error and lets the person retry (no partial state, no lockouts, no rate-limit theater — this is deliberately not real security per Mission.md/FeaturesList.md's own framing).
+- No new schema — reuses the `image_hash` column Signup already added.
 
 ## To Do
 
-## Done
+- Rewrite `/login`'s template: a file upload form for the PNG, replacing the stub message and old key field.
+- Rewrite `/login`'s POST handler: read the uploaded file, hash it, look up by `image_hash`, start the session on match or show an error otherwise.
+- Verify with Playwright end-to-end: sign up a fresh account, download the PNG, then upload that exact same file to `/login` and confirm a session starts (redirected to `/`, header shows "logged in as <username>"); uploading an unrelated/different image fails cleanly with no session created.
 
-- Added `avatar_url(username)` as a Jinja global (looks up the user id, checks `static/avatars/<id>.png` existence) usable across profile/index/thread without duplicating the check in every route.
-- Added the avatar `<img>` (or placeholder circle) to `profile.html`'s header, `index.html`'s per-post meta line, and `thread.html`'s per-message meta line.
-- Styled the avatar (small circle, consistent sizes) and the placeholder fallback.
-- Verified with Playwright: a freshly signed-up user's avatar renders as a real `<img>` correctly cropped on their own profile page and next to their post in the stream; the seeded bot (no avatar file) shows the placeholder `<span>` instead of a broken image — also confirmed visually with a screenshot.
+## Done
 
 ## Details
 
-- This task is purely about display — the actual cropping/storage already happened in Signup, out of necessity (the raw image can't be kept around to derive from later).
+- This is the last remaining feature in FeaturesList.md — once this lands, Placeholder identity's key-based flow is fully retired and the real PNG-drawing identity system (Doodle canvas → ID export → Signup → Avatar derivation → Login) is complete end to end.
+- No password-reset-style recovery is added here, matching Mission.md's explicit "losing the PNG means losing the account permanently — no recovery, by design."
