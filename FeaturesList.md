@@ -16,7 +16,7 @@
 - [x] Coordinator bots: reach out with a concrete match and a concrete next step.
 - [x] Welcome bot: explain the 9-out-of-10 culture and why this isn't money or barter.
 - [x] Offsite routing: help a giver post somewhere real and point the receiver at it.
-- [ ] Privacy enforcement: bots read only bot conversations, and never repeat personal details between people.
+- [x] Privacy enforcement: bots read only bot conversations, and never repeat personal details between people.
 - [ ] Doodle canvas: template with a dotted name line and a face square, a few colors, an eraser, and a clear button.
 - [ ] ID export: render the canvas to a high-resolution PNG the user downloads.
 - [ ] Signup: claim a unique username, check the image hash is unique, then release the PNG.

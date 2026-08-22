@@ -158,6 +158,19 @@ def find_or_create_thread(db, user_a_id, user_b_id):
     return cur.lastrowid
 
 
+class BotPrivacyViolation(Exception):
+    pass
+
+
+def assert_bot_thread(t):
+    """Bots may only ever read/act on bot threads (Mission.md's hard
+    privacy rule: never human-to-human conversations). Every code path
+    that extracts facts or sends a coordinator follow-up must call this
+    first, so a future call site can't silently skip the check."""
+    if not t["is_bot_thread"]:
+        raise BotPrivacyViolation("bot logic invoked on a human-to-human thread")
+
+
 FACT_PATTERNS = [
     ("offers", re.compile(r"\bi(?:'m| am)? (?:have|offer(?:ing)?)\s+(?:a |an |some )?([^.,!\n]+)", re.I)),
     ("needs", re.compile(r"\b(?:i need|looking for)\s+(?:a |an |some )?([^.,!\n]+)", re.I)),
@@ -245,6 +258,7 @@ def thread(thread_id):
                 (thread_id, user["id"], body),
             )
             if t["is_bot_thread"]:
+                assert_bot_thread(t)
                 bot_id = thread_other_user(t, user["id"])
                 got_new_need = False
                 for key, value in extract_facts(body):
