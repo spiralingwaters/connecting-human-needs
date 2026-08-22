@@ -1,0 +1,4 @@
+build/db/site.db
+build/db/flask_secret_key
+__pycache__/
+*.pyc

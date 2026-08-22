@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Sign up — Connecting Human Needs{% endblock %}
+
+{% block content %}
+  {% if issued_key %}
+    <p class="warning">
+      This is your account key for <strong>{{ username }}</strong>. Copy it and keep it
+      somewhere safe — this is a placeholder stand-in for the real login, it is
+      <strong>not secure</strong>, and there is no recovery: lose this key and you lose the
+      account.
+    </p>
+    <div class="key-reveal">
+      <code id="issued-key">{{ issued_key }}</code>
+      <button type="button" class="copy-key" data-copy-target="issued-key">Copy</button>
+    </div>
+    <p><a href="{{ url_for('login') }}">Continue to log in</a></p>
+  {% else %}
+    {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
+    <form class="compose-form" method="post" action="{{ url_for('signup') }}">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required maxlength="40">
+      <button type="submit">Sign up</button>
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    document.querySelectorAll("[data-copy-target]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const text = document.getElementById(btn.dataset.copyTarget).textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          btn.textContent = "Copied";
+        });
+      });
+    });
+  </script>
+{% endblock %}

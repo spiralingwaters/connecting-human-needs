@@ -2,7 +2,7 @@
 
 - [x] Site shape: what sections exist, how people move between them, where gift notes live, and how bots take part — decided and written down before code.
 - [x] Project skeleton: server, database, and a single styled page that renders.
-- [ ] Placeholder identity: signup hands out a random key the user copies; pasting it back logs them in. A plain stand-in for the PNG login, never called security.
+- [x] Placeholder identity: signup hands out a random key the user copies; pasting it back logs them in. A plain stand-in for the PNG login, never called security.
 - [x] Public feed: post, read, and reply in the open.
 - [ ] Search: find stream posts by keyword. Tentative ranking plan (tiered by term match, newest-first within each tier) in SiteShape.md "Open for later tasks" — still not finalized.
 - [ ] Gift notes: write a note (what's offered, how to reach you), see it, pass it on.

@@ -10,9 +10,21 @@
 <body>
   <header class="site-header">
     <a class="site-title" href="/">Connecting Human Needs</a>
+    <span class="auth-status">
+      {% if current_user %}
+        logged in as <strong>{{ current_user.username }}</strong>
+        <form class="logout-form" method="post" action="{{ url_for('logout') }}">
+          <button type="submit" class="link-button">Log out</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('signup') }}">Sign up</a>
+        <a href="{{ url_for('login') }}">Log in</a>
+      {% endif %}
+    </span>
   </header>
   <main>
     {% block content %}{% endblock %}
   </main>
+  {% block scripts %}{% endblock %}
 </body>
 </html>
