@@ -82,8 +82,80 @@ body {
 
 main {
   max-width: 640px;
-  margin: 2rem auto;
-  padding: 0 1.5rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 2rem;
+}
+
+main.has-composebar {
+  padding-bottom: 5rem;
+}
+
+.topbar-search {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  gap: 0.4rem;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0.4rem 1.5rem;
+  background: var(--bg);
+  border-bottom: 1px solid #e4e2da;
+}
+
+.topbar-search input {
+  flex: 1;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid #e4e2da;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.topbar-search button {
+  padding: 0.3rem 0.7rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.composebar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  gap: 0.5rem;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0.6rem 1.5rem;
+  background: var(--bg);
+  border-top: 1px solid #e4e2da;
+}
+
+.composebar input {
+  flex: 1;
+  font: inherit;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid #e4e2da;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.composebar button {
+  padding: 0.5rem 1.1rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .tagline {

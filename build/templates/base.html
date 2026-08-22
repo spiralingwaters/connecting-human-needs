@@ -25,9 +25,19 @@
       {% endif %}
     </span>
   </header>
-  <main>
+  <form class="topbar-search" method="get" action="{{ url_for('search') }}">
+    <input type="text" name="q" placeholder="Search&hellip;" maxlength="200" aria-label="Search the stream">
+    <button type="submit" aria-label="Search">&#128269;</button>
+  </form>
+  <main class="{% if current_user %}has-composebar{% endif %}">
     {% block content %}{% endblock %}
   </main>
+  {% if current_user %}
+    <form class="composebar" method="post" action="{{ url_for('new_post') }}">
+      <input type="text" name="body" placeholder="Say something to the stream&hellip;" maxlength="2000" required aria-label="New post">
+      <button type="submit">Post</button>
+    </form>
+  {% endif %}
   {% block scripts %}{% endblock %}
 </body>
 </html>
