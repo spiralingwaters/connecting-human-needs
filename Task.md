@@ -1,31 +1,36 @@
 # Feature Summary
 
-- [ ] Public feed: post, read, and reply in the open.
+- [ ] Placeholder identity: signup hands out a random key the user copies; pasting it back logs them in. A plain stand-in for the PNG login, never called security.
 
 ## Description
 
-Build the flat, chronological stream from SiteShape.md: one column, newest-to-oldest, no nested replies (an `@username` is just inline text for now — profile links don't exist until the Profiles feature). Reading works for anyone. Posting normally requires an account (SiteShape.md), but Placeholder identity hasn't been built yet — picked out of FeaturesList.md order via the dashboard's "work on next" flag, so this task scopes around that gap rather than blocking on it: posting uses a plain, clearly-temporary "poster name" text field with no session, no account, no security of any kind — not a preview of the real identity system, just the minimum needed to see posts flow. It gets ripped out and replaced with real accounts when Placeholder identity lands. Proximity shading (gray-by-distance, green for redeemed) is out of scope here too — it needs signup city/zip or IP geolocation, neither of which exist yet — so posts render with a single neutral background for now.
+Build the temporary stand-in identity system that the PNG-drawing login will eventually replace (Mission.md "PNG authorization is deferred until much later"). `/signup` picks a unique username and generates a long random key, shows it to the user once with a copy button and a clear "this is not secure, write it down, losing it loses the account" warning, and creates a `users` row (username, key_hash, created_at) — the raw key is never stored, only its hash, mirroring the eventual PNG-hash pattern even though this isn't real security. `/login` is a single field: paste the key, server hashes it and looks up the matching user, then starts a plain session (Flask session cookie storing user id). Once logged in, the site should show the username somewhere in the header and offer a logout link. The existing `/new` post form's free-text "poster name" field gets replaced: posting now requires being logged in, and `author_name` is looked up from the session instead of typed in — `/new` redirects to `/login` if no session exists. The `posts` table gets a nullable `author_id` column referencing `users.id` (kept alongside `author_name` for now, per Task history's note that the schema will need a real author reference) — new posts fill both; existing seeded/legacy posts keep author_name only.
 
-- DB: `posts` table — id, author_name, body, created_at.
-- `/` (already exists) — list posts newest-first, plain single column, neutral background per post (no proximity shading yet).
-- `/new` — GET shows a compose form (poster name + message body), POST inserts a row and redirects to `/`.
-- No reply threading, no nested comments — matches SiteShape.md.
-- No proximity shading, no Local toggle filtering yet — needs location data that doesn't exist until identity/geolocation land; flagged as follow-up, not silently dropped.
-- Posting is deliberately not gated by any account — temporary, to be replaced wholesale once Placeholder identity exists.
+- DB: new `users` table — id, username (unique), key_hash, created_at. `posts` gets `author_id INTEGER REFERENCES users(id)` (nullable, for old rows).
+- `/signup` — GET shows username field; POST validates uniqueness, generates key, creates user, shows the key exactly once (never persisted anywhere retrievable).
+- `/login` — GET shows a single key field; POST hashes + looks up, starts session, redirects to `/`.
+- `/logout` — clears session, redirects to `/`.
+- Header shows "logged in as @username" + logout link when a session exists, or Sign up / Log in links when not.
+- `/new` requires a session; drop the free-text poster-name field entirely, use the session's username.
+- No password reset, no email, no recovery — losing the key loses the account, matching the eventual PNG design's "no recovery, by design."
+- Out of scope: the actual PNG doodle canvas/export (separate later features) — this only builds the key-based stand-in flow.
 
 ## To Do
 
-## Done
+- Add `users` table + `posts.author_id` column to schema.sql.
+- Build `/signup` route + template (username form, one-time key reveal).
+- Build `/login` route + template (key field, session start).
+- Build `/logout` route.
+- Update header (base.html) to show logged-in state / auth links.
+- Update `/new` to require session, drop free-text author name, use session username + author_id.
+- Update seed data / existing posts to keep working with a nullable author_id.
+- Style the signup/login forms and key-reveal box consistently with existing forms.
+- Verify with a scripted test-client run: signup issues a key and creates a user, login with the right key starts a session, login with a wrong key fails, logged-out `/new` redirects to `/login`, logged-in `/new` posts under the session's username, logout clears the session.
 
-- Added `posts` table to schema.sql + a seed post.
-- Updated `/` route + template to list posts newest-first.
-- Added `/new` route (GET form, POST insert) + template.
-- Added styling for the stream, compose link, and compose form.
-- Verified with a scripted test-client run: seed post renders, `/new` form loads, posting inserts and redirects, new post appears before the seed post (newest-first), empty submissions are rejected without creating a post.
-- Restyled the site header per feedback: near-zero padding, site title set in italic Cormorant Garamond (Google Fonts) — elegant/important-looking but small and quiet enough to ignore.
+## Done
 
 ## Details
 
-- Picked via dashboard "work on next" flag, ahead of Placeholder identity in FeaturesList.md order — deliberate, not an oversight.
-- Posting today has zero auth/security — must be swapped for real accounts when Placeholder identity is built (schema will need an author reference at that point, not just a free-text name).
-- Proximity shading and the Local toggle are explicitly deferred — they depend on location data this task doesn't have.
+- Picked as the next feature per FeaturesList.md order and the dashboard's earlier "Start next: placeholder identity" quick-option note — Public feed intentionally jumped ahead of it, so this closes that gap.
+- This is explicitly temporary/insecure by design (Mission.md + FeaturesList.md wording) — do not add password hashing best-practices, rate limiting, etc. beyond a plain hash lookup; that's over-engineering a stand-in that gets torn out for the real PNG system.
+- Gift notes, Profiles, Private messaging, and Blocking all depend on real user identity — this feature unblocks all of them.
