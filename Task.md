@@ -16,5 +16,6 @@ All 22 features in FeaturesList.md are built and checked off. The user is now do
 
 - Moved the "That username is taken" signup error to render directly under the username input instead of above the whole form.
 - Fixed the drawn ID picture disappearing on a failed signup (taken username, taken drawing, etc.) — the server now hands the submitted username and drawing back, and the canvas restores the drawing instead of resetting blank.
+- Added a circle inscribed in the face square on the doodle canvas template (signup.html and draw.html), as a visual hint that the eventual avatar crop could go square or round.
 
 ## Details

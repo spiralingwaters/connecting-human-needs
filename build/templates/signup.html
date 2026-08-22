@@ -55,6 +55,9 @@
       ctx.strokeStyle = '#c9c5b8';
       ctx.lineWidth = 2 * scale;
       ctx.strokeRect(140 * scale, 40 * scale, 200 * scale, 200 * scale);
+      ctx.beginPath();
+      ctx.arc(240 * scale, 140 * scale, 100 * scale, 0, Math.PI * 2);
+      ctx.stroke();
       ctx.setLineDash([6 * scale, 6 * scale]);
       ctx.beginPath();
       ctx.moveTo(40 * scale, 400 * scale);

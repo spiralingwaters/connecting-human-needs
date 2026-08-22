@@ -43,6 +43,11 @@
       ctx.lineWidth = 2 * scale;
       // Face square, upper portion.
       ctx.strokeRect(140 * scale, 40 * scale, 200 * scale, 200 * scale);
+      // Circle inscribed in the same square — a hint that the face crop could
+      // end up square or round; the doodle itself decides which reads better.
+      ctx.beginPath();
+      ctx.arc(240 * scale, 140 * scale, 100 * scale, 0, Math.PI * 2);
+      ctx.stroke();
       // Dotted name line, lower third.
       ctx.setLineDash([6 * scale, 6 * scale]);
       ctx.beginPath();
