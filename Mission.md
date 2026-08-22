@@ -29,6 +29,7 @@ Nothing built here may harm anyone. That outranks everything else written above.
 
 - **Weightless gifts first**: skills, attention, know-how — proofreading, translating, debugging, teaching, a recipe, listening. No logistics, instant, from anywhere to anywhere. The cycle can spin many times before a couch ever moves.
 - **Heavy things get routed offsite.** The site holds no inventory and handles no logistics; it learns enough about two people to say "go here, look now" — Craigslist, a local group, a bulletin board.
+- **Needs may go unanswered — that's life, and we don't pretend otherwise.** But a bot never leaves someone in silence: no match today means suggesting alternatives, other places to look, and asking again later, because notes come through constantly.
 - **Leaving is a success, not churn.** Social platforms measure time-on-site. This one should quietly want you to close the tab and go meet someone.
 
 ### The Bots
@@ -58,5 +59,4 @@ Nothing built here may harm anyone. That outranks everything else written above.
 - What a profile actually displays, and whether even offer-counts become a score people chase.
 - Whether "no account recovery" survives contact with real users.
 - How the first hundred people are found, and what they already believe when they arrive.
-- What the site does for someone whose need goes unanswered.
 - Whether any part of the 9/10 rule ever becomes machine-visible, or stays purely cultural forever.
