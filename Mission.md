@@ -62,9 +62,14 @@ Nothing built here may harm anyone. That outranks everything else written above.
 - A unique username is required at signup; the PNG only downloads if both username and image are unique.
 - **Losing the PNG means losing the account permanently** — no recovery, by design.
 
+### Site Shape
+
+- The site's structure — page map, the flat stream, gift note lifecycle, proximity shading, blocking — is decided in **`SiteShape.md`**, not repeated here. Later features build against that document.
+
 ## Need to Revisit Before Completion
 
 - What a profile actually displays, and whether even offer-counts become a score people chase.
 - Whether "no account recovery" survives contact with real users.
 - How the first hundred people are found, and what they already believe when they arrive.
 - Whether any part of the 9/10 rule ever becomes machine-visible, or stays purely cultural forever.
+- Whether personal blocking is enough, or the site eventually needs real moderation (reporting, removal) and who would have that authority — see `SiteShape.md`.

@@ -17,21 +17,22 @@ Before any server exists, decide the actual shape of the site: what a person see
 
 ## To Do
 
-- Answer the open structural questions with the user (primary surface, where notes live, how bots appear, what a visitor sees first).
-- Draft the page map: every section, what it holds, and every link between sections.
-- Walk a gift note's whole life through the map — written, seen, passed openly, passed quietly, redeemed, author notified — and confirm each step has a place to happen.
-- Walk a need's whole life through the map — spoken, noticed by a bot, matched, routed offsite — and confirm nothing turns it into a countable object.
-- Check the map against the hard privacy rules: no surface can ever display a receipt, and no bot can reach a human-to-human message.
-- Write the structure document into the repo and link it from Mission.md's More section.
-- Review the map once more purely for simplicity: can any section be removed or merged?
+- Get the user's read on `SiteShape.md` as a whole — anything to change before this task is marked done.
 
 ## Done
+
+- Answered the open structural questions with the user (primary surface, where notes live, how bots appear, what a visitor sees first, blocking).
+- Drafted the page map: every section, what it holds, and every link between sections.
+- Walked a gift note's whole life through the map — authored, held, redeemed, expired/renewed — confirmed each step has a place to happen.
+- Confirmed needs stay purely conversational: no needs board, no queue, nothing countable anywhere in the map.
+- Checked the map against the hard privacy rules: no surface displays a receipt; bot/human message channels are structurally separate; bot-held notes are the only custody the site tracks.
+- Wrote `SiteShape.md` into the repo and linked it from Mission.md's "More" section.
+- Reviewed the map for simplicity: one flat stream instead of separate sections for notes/chat; no nested comment threads.
+- Added the Blocking feature (raised mid-task) to `FeaturesList.md` and to `SiteShape.md`.
 
 ## Details
 
 - Mission constraints that bind this task: offers codified / requests only spoken; giving visible / receiving private; bots read bot conversations only; notes pass openly or quietly; leaving is a success, not churn.
 - No code, no schema, no stack decisions in this task — the stack question stays open on the dashboard.
-- The structure document is the artifact this task produces; later features are built against it rather than re-deciding layout.
-
-- Decisions locked so far: one flat chronological stream (Global/Local view toggle, not separate sections), gift notes are a post type inside it, proximity-shaded post backgrounds from rough signup city/zip, 30-day expiration as an author-settable maximum with one-click renew, redemption is a self-reported optional click (site is a courtesy layer, never required), bots post their own content rather than replying/threading, @mentions instead of nested comments.
-- Still open: what a logged-out visitor sees first; whether on-site "passing" needs any custody tracking or is just generating a shareable link/message.
+- `SiteShape.md` is the artifact this task produced; later features are built against it rather than re-deciding layout.
+- Real-content moderation (reporting/removal, beyond personal blocking) is flagged as open in Mission.md's "Need to Revisit" — no admin role exists yet, and it wasn't decided in this task.
