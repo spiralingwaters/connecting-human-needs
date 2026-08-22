@@ -1,32 +1,24 @@
 # Feature Summary
 
-- [ ] Doodle canvas: template with a dotted name line and a face square, a few colors, an eraser, and a clear button.
+- [ ] ID export: render the canvas to a high-resolution PNG the user downloads.
 
 ## Description
 
-Build the drawing surface Mission.md describes as the real login's core: "a template canvas with a dotted line for a name and a square for a face; a simple multi-color doodle tool." This task is purely the drawing UI — no export, no hashing, no signup wiring yet (those are the next three features). A plain HTML5 `<canvas>`, drawn with mouse/touch, with a faint permanent template layer (a dotted line near the bottom for the person to write their name over, and an outlined square for a face doodle) that stays visible under the drawing but isn't itself part of what gets exported as "drawn" content later — it's just a guide. A few color swatches to pick a pen color, an eraser toggle, and a clear button that wipes the user's drawing back to blank (template guide reappears). Keep this dead simple: no undo stack, no brush size slider, no layers — KISS.
+Add the export step to the Doodle canvas built last task: a "Download my ID" button that renders the drawing to a PNG file the browser saves locally. "High-resolution" here means the canvas's actual pixel buffer is meaningfully larger than its on-screen display size (so the exported PNG isn't a blurry screen-resolution capture) — bump the canvas's internal `width`/`height` attributes up (e.g. to 1200×1200) while keeping its on-screen CSS size smaller (e.g. 480px), which the existing pointer-position math in `draw.html` already handles correctly (it maps screen coordinates to canvas-buffer coordinates via `canvas.width / rect.width`, so drawing at a higher internal resolution than the display size requires no other changes). Export uses the browser's native `canvas.toDataURL('image/png')` plus a plain `<a download>` link — no server round-trip, no new route; the PNG never touches the server until Signup (next feature), which is exactly Mission.md's flow (draw → export → the file itself is what gets uploaded at signup).
 
-- New route `/id/draw` (no login required — this happens *before* an account exists, per Mission.md's identity flow) rendering a canvas page.
-- Template guide: a dotted line roughly a third of the way up from the bottom (for the name) and an outlined square above it (for the face), drawn in a light, unobtrusive color directly onto the canvas as a non-erasable background layer (redrawn under the user's strokes any time the canvas is cleared or on load).
-- A small palette: 4-6 fixed colors (e.g. black, red, blue, green, plus maybe orange/purple) as clickable swatches, one active at a time.
-- An eraser toggle: switches the pen to erase (clear to background) instead of draw.
-- A clear button: wipes all user strokes, redraws just the template guide.
-- Pure client-side JS + canvas — no new DB table, no server-side drawing state; this page doesn't submit anything to the server yet (that's ID export next).
-- Works with both mouse and touch input (pointer events), since a phone is a very plausible way to draw this.
+- Bump `#idCanvas`'s `width`/`height` attributes to a higher resolution (1200×1200) while its CSS display size stays smaller (`max-width: 480px` already in place) — confirm drawing still lines up correctly on screen (it should, since coordinates are already normalized by the existing `pointerPos()` ratio math).
+- Add a "Download my ID" button below the canvas that calls `canvas.toDataURL('image/png')`, sets it as the `href` of a hidden `<a download="my-id.png">`, and clicks it — a standard client-side download, no server involved.
+- No new schema, no new route.
 
 ## To Do
 
-## Done
+- Increase the canvas's internal resolution (`width`/`height` attributes) to 1200×1200, keeping the on-screen display size at 480px via existing CSS.
+- Add a "Download my ID" button + hidden download link that exports the canvas as a PNG.
+- Verify with Playwright: after drawing something, clicking "Download my ID" triggers a download; capture the downloaded file and confirm it's a valid PNG at the higher resolution (1200×1200), not the old 480×480.
 
-- Added `/id/draw` route + `draw.html` template with a `<canvas>` element.
-- Drew the template guide (dotted name line + face square outline) as a background layer, redrawn on load and after clear.
-- Wired up freehand drawing via pointer events, respecting the active color.
-- Added color swatch buttons that set the active pen color.
-- Added an eraser toggle button that switches strokes to erase mode.
-- Added a clear button that wipes user strokes and redraws the template guide.
-- Verified in a real browser via Playwright: drew a stroke, switched to red and confirmed the canvas changed, toggled the eraser and confirmed its active state, clicked clear and confirmed the canvas reset — also visually confirmed with a screenshot (face square, dotted name line, and drawn strokes all render correctly).
+## Done
 
 ## Details
 
-- No export/download yet — that's ID export, next feature. This task's canvas doesn't need to produce a file.
-- No login gate on this route — Mission.md's flow is draw first, then sign up with the drawing, so an account can't exist yet when this page is used.
+- No server involvement in this task — the PNG only reaches the server once Signup (next feature) uploads it for hashing.
+- Mission.md's "no recovery" property is unaffected by this task; it's just the export mechanism.
