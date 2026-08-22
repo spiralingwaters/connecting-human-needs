@@ -20,6 +20,17 @@
             <button type="submit">Redeem</button>
           </form>
         </div>
+        <details class="offsite-details">
+          <summary>Post this somewhere with more reach too</summary>
+          <p class="placeholder">This site can't post on your behalf — copy this text into a listing wherever makes sense (Craigslist, Facebook Marketplace, Freecycle), or use the search link below as a starting point.</p>
+          <pre class="listing-text">Free: {{ note.title }}
+
+{{ note.description }}
+
+Contact: {{ note.contact_info }}</pre>
+          <a href="https://www.craigslist.org/search/zip?query={{ note.title | urlencode }}&sort=date" target="_blank" rel="noopener">Search Craigslist's free section for &ldquo;{{ note.title }}&rdquo;</a>
+          <p class="placeholder">(Not city-specific yet — pick your region on Craigslist's own site; this site doesn't have your location.)</p>
+        </details>
       </article>
     {% else %}
       <p class="placeholder">You aren't holding any gift notes.</p>

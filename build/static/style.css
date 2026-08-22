@@ -309,6 +309,27 @@ main {
   border-color: #cfe6d3;
 }
 
+.offsite-details {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.offsite-details summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.listing-text {
+  white-space: pre-wrap;
+  background: var(--bg);
+  border: 1px solid #e4e2da;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.85rem;
+}
+
 .bot-label {
   font-family: "IBM Plex Mono", ui-monospace, monospace;
   font-size: 0.65rem;
