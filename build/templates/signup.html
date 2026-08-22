@@ -33,7 +33,10 @@
         <button type="button" id="clearBtn" class="tool-btn">Clear</button>
       </div>
 
-      <canvas id="idCanvas" width="1200" height="1200"></canvas>
+      <div class="canvas-wrap">
+        <canvas id="idCanvas" width="1200" height="1200"></canvas>
+        <canvas id="templateOverlay" width="1200" height="1200"></canvas>
+      </div>
       <input type="hidden" name="image_data" id="imageDataField">
       <button type="submit">Claim &amp; download my ID</button>
     </form>
@@ -45,25 +48,31 @@
   <script>
     const canvas = document.getElementById('idCanvas');
     const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('templateOverlay');
+    const overlayCtx = overlay.getContext('2d');
     let activeColor = '#141413';
     let erasing = false;
     let drawing = false;
     const scale = canvas.width / 480;
 
+    // Drawn once onto a separate, non-interactive overlay canvas so the
+    // square/circle/name-line guides never end up baked into the exported
+    // PNG — they're a hint for drawing, not part of the saved ID.
     function drawTemplate() {
-      ctx.save();
-      ctx.strokeStyle = '#c9c5b8';
-      ctx.lineWidth = 2 * scale;
-      ctx.strokeRect(140 * scale, 40 * scale, 200 * scale, 200 * scale);
-      ctx.beginPath();
-      ctx.arc(240 * scale, 140 * scale, 100 * scale, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([6 * scale, 6 * scale]);
-      ctx.beginPath();
-      ctx.moveTo(40 * scale, 400 * scale);
-      ctx.lineTo(440 * scale, 400 * scale);
-      ctx.stroke();
-      ctx.restore();
+      overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+      overlayCtx.save();
+      overlayCtx.strokeStyle = '#c9c5b8';
+      overlayCtx.lineWidth = 2 * scale;
+      overlayCtx.strokeRect(140 * scale, 40 * scale, 200 * scale, 200 * scale);
+      overlayCtx.beginPath();
+      overlayCtx.arc(240 * scale, 140 * scale, 100 * scale, 0, Math.PI * 2);
+      overlayCtx.stroke();
+      overlayCtx.setLineDash([6 * scale, 6 * scale]);
+      overlayCtx.beginPath();
+      overlayCtx.moveTo(40 * scale, 400 * scale);
+      overlayCtx.lineTo(440 * scale, 400 * scale);
+      overlayCtx.stroke();
+      overlayCtx.restore();
     }
 
     function resetCanvas() {
@@ -126,6 +135,7 @@
       document.getElementById('imageDataField').value = canvas.toDataURL('image/png');
     });
 
+    drawTemplate();
     const restoredImage = {{ (image_data_url or '')|tojson }};
     if (restoredImage) {
       const img = new Image();

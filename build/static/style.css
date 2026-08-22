@@ -371,6 +371,12 @@ main {
   border-color: var(--accent);
 }
 
+.canvas-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
 #idCanvas {
   border: 1px solid #e4e2da;
   border-radius: 8px;
@@ -378,6 +384,17 @@ main {
   width: 480px;
   height: 480px;
   max-width: 100%;
+  display: block;
+}
+
+#templateOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 480px;
+  height: 480px;
+  max-width: 100%;
+  pointer-events: none;
 }
 
 .avatar {
