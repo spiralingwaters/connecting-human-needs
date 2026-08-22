@@ -14,14 +14,14 @@ Stand up the minimal `build/` tree that the rest of the site grows from: a small
 
 ## To Do
 
-- Decide exact file layout inside `build/` (app entry, templates/, static/, db/).
-- Add SQLite schema file + minimal seed/init.
-- Add Flask app with `/` route rendering a template.
-- Add base stylesheet and confirm the page renders styled in a browser.
-- Confirm app runs correctly behind a simple nginx reverse-proxy config (note requirements even if nginx itself isn't installed here).
-- Write a short README in `build/` for how to run it.
-
 ## Done
+
+- Decided file layout inside `build/` (app.py, templates/, static/, db/).
+- Added SQLite schema file + seed data.
+- Added Flask app with `/` route rendering a template.
+- Added base stylesheet and confirmed the page renders styled (verified via test client — tagline pulled from DB, CSS linked).
+- Documented nginx reverse-proxy requirements in `build/README.md`.
+- Wrote `build/README.md` covering how to run it.
 
 ## Details
 
