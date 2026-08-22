@@ -1,28 +1,31 @@
 # Feature Summary
 
-- [ ] Search: find stream posts by keyword. Tentative ranking plan (tiered by term match, newest-first within each tier) in SiteShape.md "Open for later tasks" — still not finalized.
+- [ ] Gift notes: write a note (what's offered, how to reach you), see it, pass it on.
 
 ## Description
 
-Build keyword search over the stream using the tentative ranking plan already written down in SiteShape.md: split the query into terms, group results into three tiers — all terms match, then some terms match, then only one term matches — newest-first within each tier. This is explicitly tentative (not finalized), so keep the implementation simple and easy to re-tune rather than over-building it: plain SQL LIKE matching against `posts.body` (and `author_name`, since `@username` mentions are inline text per SiteShape.md), no full-text index, no external search engine. `/search?q=...` renders using the same post markup as the stream, with each tier visually separated per SiteShape.md ("a colored band/strip framing that tier, not the post box itself") — proximity/redeemed shading isn't implemented yet (Public feed deferred it), so for now this only needs the tier-band styling, not real distance shading. A search box goes in the header or near the top of `/`, submitting GET to `/search`.
+Build the gift note object itself and the first two steps of its lifecycle from SiteShape.md ("Gift note lifecycle"): **Authored** and **Held**. A gift note has a title, description, and contact info, an original author, a current holder, and an expiration date (30-day maximum, per SiteShape.md). Authoring a note requires being logged in (Placeholder identity) and sends it as a private message to one specific person — but Private messaging doesn't exist as its own feature yet, so this task builds the minimum private hand-off a note needs (recipient chosen by username at authoring time, note lands directly in their held list) without building the general messaging inbox/threads UI; that's explicitly deferred to the Private messaging feature. Passing a note on (from the current holder to a new person) and redeeming it are also part of the full lifecycle in SiteShape.md, but this task is scoped to authoring + holding + viewing only, per its FeaturesList.md wording ("write a note... see it, pass it on" — passing lands in the next task, Note passing, which also covers the redemption/public-announcement step). This task therefore stops at: author a note to a specific recipient, and the recipient can see it in their held list.
 
-- `/search?q=<query>` — splits `q` on whitespace into terms, runs three queries (or one query with tier computed in Python) to bucket posts by how many distinct terms matched, orders each bucket by id desc, renders three optional sections.
-- Reuses the existing `.post` / `.stream` markup for individual posts; adds a wrapping section per tier with a label and a distinct background band.
-- Empty query or no matches: simple "no results" messaging, no crash.
-- Search box: a simple GET form, no autocomplete/live search — KISS.
-- Out of scope: proximity shading integration (doesn't exist yet), search ranking finalization (still tentative per SiteShape.md — revisit if that doc's plan changes).
+- DB: `gift_notes` table — id, title, description, contact_info, original_author_id, current_holder_id, expires_at, created_at.
+- `/notes/new` — GET shows a form (title, description, contact info, recipient username, expiration handled automatically as +30 days from creation); POST validates the recipient exists, creates the note with current_holder_id = recipient, redirects to `/notes`.
+- `/notes` — a logged-in user's held notes list: shows every gift_note where current_holder_id = them and not expired, each showing title, description, contact info, original author's username, and days until expiration.
+- Expired notes (`expires_at` in the past) don't show in `/notes` — silently drop off per SiteShape.md ("quietly stops being redeemable/passable"), no separate cleanup job needed since the query itself filters on expiry.
+- Authoring and viewing require a session (login); `/notes/new` and `/notes` redirect to `/login` if logged out.
+- Out of scope this task: passing a note on to someone else, redeeming, the public redeemed-announcement post, renewal — all explicitly Note passing's job next.
 
 ## To Do
 
-## Done
+- Add `gift_notes` table to schema.sql.
+- Add `/notes/new` route + template: author a note to a chosen recipient (by username), 30-day expiration set automatically.
+- Add `/notes` route + template: logged-in user's held notes, unexpired only, showing original author + expiration.
+- Require login for both routes (redirect to `/login` if logged out), same pattern as `/new`.
+- Add a nav link to `/notes` and `/notes/new` somewhere reachable (header, alongside auth links, only when logged in).
+- Style the notes list/form consistently with existing forms/posts.
+- Verify with a scripted test-client run: authoring a note to a valid recipient creates it and it shows in the recipient's `/notes`, authoring to a nonexistent username fails cleanly, an expired note (backdated in the test) does not show in `/notes`, logged-out access to both routes redirects to `/login`.
 
-- Added `/search` route: parses `q` into terms, buckets matching posts into 3 tiers, newest-first within each.
-- Added `search_results.html` template with tier sections and bands.
-- Added a search box (GET form) to the stream page, wired to `/search`.
-- Styled the tier bands per SiteShape.md wording (background band behind each tier section, not the post box itself).
-- Verified with a scripted test-client run: a post matching both terms ranks in the top tier, a post matching only one of two terms lands in the one-match tier, non-matching posts are excluded, empty query and no-match query both render without error, search box present on `/`.
+## Done
 
 ## Details
 
-- Ranking plan is explicitly "tentative — not yet built or visually finalized" per SiteShape.md; if the user later firms up the plan differently, this implementation is expected to be revisited, not a bug.
-- No proximity shading yet, so tier bands are the only visual grouping for now — don't invent shading logic that doesn't exist elsewhere in the app yet.
+- Scoped deliberately short of full lifecycle — passing/redeeming/public announcement is FeaturesList.md's next item, Note passing.
+- The "send to one specific person" step is a minimal stand-in for the general private-message compose action described in SiteShape.md ("sending a gift note is an action inside a person-thread") — full messaging UI is its own later feature.
