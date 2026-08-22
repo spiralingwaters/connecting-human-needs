@@ -40,6 +40,7 @@ Nothing built here may harm anyone. That outranks everything else written above.
 - **Small roles, short prompts.** One persona invites engagement and explains why we do this without money or barter; others coordinate matches. Narrow jobs keep prompts tiny.
 - **The database is the memory, not the context window.** Personas load a handful of structured facts ("has couch, Portland, uses Craigslist") plus a few lines of who they are. Overlap-finding is plain database work and word matching, which costs nothing.
 - **Honest about being coordinated.** No staged coincidences — a bot says plainly "someone here is giving away a couch in your city, here's the link." The delight survives being found out.
+- **Bots can give too, in a way.** A bot can go looking for free things elsewhere and offer them as its own gift note — redeeming it reveals the real external location, not something the bot possesses. It has to be framed honestly as "I found this" from the start, same reason as above.
 
 ### How We Build
 

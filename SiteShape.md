@@ -12,14 +12,14 @@ The Global stream, unauthenticated, read-only. This is the whole site for a logg
 
 ## The stream
 
-- Every post is a peer: a plain message, a gift note (offer), a bot-originated post (welcome, a match made, a weekly circulation digest), or an in-place update marking a note redeemed.
+- Every post is a peer: a plain message, a redeemed-note announcement, or a bot-originated post (welcome, a match made, a weekly circulation digest). Gift notes themselves are never posted publicly while active — see Gift note lifecycle below.
 - No nested replies, no comment threads. `@username` refers to someone inline — a link, not a thread.
-- **Proximity shading**: every post's background is shaded by rough distance between the viewer's signup city/zip and the post author's — same city near-white, nearby very light, far away darker gray. Computed per-viewer at render time from two rough lat/lon points; no exact location is ever stored per-post.
+- **Proximity shading**: every ordinary post's background is shaded by rough distance between the viewer's location and the post author's — same city near-white, nearby very light, far away darker gray. Rough lat/lon comes from a logged-in user's signup city/zip, and from a best-guess (IP-based) location for a visitor who isn't logged in at all, so shading works from the first page load. The exact distance (down to about half a mile) is computed **client-side**, in the browser, from the two raw rough lat/lon numbers the server sends down — the server never has to compute distance for every viewer/post pair itself. The underlying points are city/zip-scale, not addresses, so the number is precise given rough inputs, not GPS-precise.
 - Posting requires an account (placeholder-identity key). Reading does not.
 
 ## Profiles
 
-Every profile is public and reachable by clicking a username anywhere. A profile shows: username, avatar (deferred until the PNG identity feature lands), and a **gift wall** — the chronological list of that person's notes that have been redeemed. Nothing else. No one can post on another person's profile; the only person-to-person contact off the shared stream is a private message.
+Every profile is public and reachable by clicking a username anywhere. A profile shows: username, avatar (deferred until the PNG identity feature lands), a **gift wall** (the chronological list of that person's notes that have been redeemed), and a chronological list of their own posts to the stream — so an `@mention` ("@username is trying to redeem all my gift notes") can be clicked through to see what they've actually said or what they were responding to. No one can post *on* another person's profile — it's a read-only view of things they've already said or given elsewhere; the only person-to-person contact off the shared stream is a private message.
 
 ## Private messages
 
@@ -40,10 +40,18 @@ A personal filter, not a platform punishment — one person choosing not to see 
 
 ## Gift note lifecycle
 
-1. **Authored** — posted to the stream as an active offer, with an expiration date the author sets (site enforces a 30-day maximum).
-2. **Held** — by a human, this is invisible to the site; a note can be received and redeemed entirely off-platform, with nothing reported back. By a **bot**, this is the one case the site tracks explicitly (see below), since the bot needs somewhere to hold state while it looks for who to route the note to.
-3. **Redeemed** — whoever currently holds the note clicks "redeemed." This is a self-reported, optional act; the site is a courtesy layer, never the source of truth. The click updates the original post in place (no duplicate stream clutter) and adds an entry to the **original author's** gift wall — never the holder's, never a bot's, and the redeemer is never named.
-4. **Expired** — if unredeemed past its date, the post simply ages out of being claimable; it doesn't disappear from the stream (it's a chat log, not a listing) and carries no "failed" label. The author gets a one-click **renew**, covering the "gives the same thing away every few days" case without a separate recurring-gift mechanism.
+A gift note is never posted to the public stream while active — discovery happens the ordinary way, through spoken needs in the flat stream or in conversation, and a giver who sees an overlap decides who to send to. The note itself only surfaces publicly once, at the very end.
+
+1. **Authored** — the giver writes a note (title, description, contact info) and sends it as a **private message to one specific person they choose**. An expiration date is set (site enforces a 30-day maximum). Nothing about this step is public.
+2. **Held** — the note lands in the recipient's own **held notes** list on the site (visible only to them). It always displays the **original author's** username, for as long as it's held, however many hands it's passed through — which is also how someone can notice "I keep receiving notes that trace back to the same person" without the platform ever tallying or scoring that. If a note is instead handed over entirely off-site (in person, no message sent through the platform), the site never knows and never needs to.
+3. **Passed** — from their held list, the holder can send it on to someone else with one action (a private message again, removing it from their list and adding it to the next person's), still carrying the original author's name.
+4. **Redeemed** — the current holder clicks "redeemed" from their held list. This is self-reported and optional; the site is a courtesy layer, never the source of truth. This is the **one and only moment** the note becomes public: a single stream post appears, showing just the note's title, the original author's username (linked), and the redemption timestamp — no commentary, and no mention of when it was first offered or who redeemed it. It's added to the original author's gift wall at the same time. Clicking redeem is itself a small gift twice over — it hands the giver a new gift-wall entry, and it shows the whole site that a gift moved.
+5. **Expired** — if unredeemed past its date while still someone's held note, it quietly stops being redeemable/passable and drops off that person's held list; since it was never public, there's nothing to visibly "fail." The original author gets a one-click **renew** — re-authoring the same note to send again — covering the "gives the same thing away every few days" case without a separate recurring-gift mechanism.
+
+### Redeemed announcements
+
+- Shaded a **subtle green**, not far off white, instead of the ordinary gray proximity shading — a redeemed post is visually distinct from an active conversation post. The distance number/km to the original author is still shown as text, same as any other post; only the background stops following the gray distance gradient.
+- **Always shown in both Global and Local streams**, regardless of which view the person has open — a completed gift is worth surfacing everywhere, not filtered out because the giver was far away. This isn't a "new site" bootstrapping rule; it stays permanent, since it's exactly the cross-distance visibility ("many people being generous, anywhere to anywhere") the Mission is trying to make normal.
 
 ## Bots in the open
 
@@ -58,16 +66,21 @@ A bot can receive a note but can never redeem one. Instead it looks for who to r
 - Only ever orders candidates for outreach; never excludes anyone or gates access.
 - Reaches out by private message, and says plainly that it's routing this on the original giver's behalf — no staged coincidences.
 
+## Bots offering things they found
+
+A bot can also go looking for free things elsewhere (a free-listings site, a local group) and match them against known needs or interests on this site — then send a gift note itself, as its own persona, the same as a human would. Redeeming it doesn't hand over anything the bot holds; it reveals the real external location or link. This has to stay honest to survive being found out: the note is framed as "I found this, here's where it is" from the start, never as if the bot personally possesses the thing.
+
 ## Rough page map
 
 - `/` — Global stream (landing page; Local toggle filters it)
-- `/u/<username>` — public profile + gift wall
-- `/messages` — private messages, split into person threads and bot threads
-- `/new` — compose a post (plain message or gift note)
+- `/u/<username>` — public profile: posts + gift wall
+- `/notes` — your held gift notes (private to you): pass on or redeem
+- `/messages` — private messages, split into person threads and bot threads; sending a gift note is an action inside a person-thread, not a public compose
+- `/new` — compose a plain post to the stream (never a gift note)
 - `/signup`, `/login` — placeholder-identity key issuance and re-entry
 
 ## Open for later tasks
 
-- Exact wording/visuals for the proximity-shade scale and the redeemed-in-place post state.
-- Whether the compose flow for a gift note differs visually from a plain message, or is one form with an "this is an offer" toggle.
+- Exact wording/visuals for the gray proximity-shade scale and the green redeemed shade.
+- Exact wording for the compose-a-gift-note action inside a message thread.
 - **Blocking only protects the blocker** — a slur is still visible to everyone who hasn't blocked that person. Whether the site also needs real moderation (reporting, and someone or something with authority to remove a post platform-wide) is a separate, bigger decision — there's no admin/moderator role defined anywhere yet — and is still open.

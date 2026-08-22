@@ -17,7 +17,7 @@ Before any server exists, decide the actual shape of the site: what a person see
 
 ## To Do
 
-- Get the user's read on `SiteShape.md` as a whole — anything to change before this task is marked done.
+- Final sign-off from the user on the revised `SiteShape.md` (private-message-first gift note lifecycle, held-notes list, redeemed-always-global-and-green, guessed location for logged-out viewers, bots offering found things).
 
 ## Done
 
@@ -36,3 +36,4 @@ Before any server exists, decide the actual shape of the site: what a person see
 - No code, no schema, no stack decisions in this task — the stack question stays open on the dashboard.
 - `SiteShape.md` is the artifact this task produced; later features are built against it rather than re-deciding layout.
 - Real-content moderation (reporting/removal, beyond personal blocking) is flagged as open in Mission.md's "Need to Revisit" — no admin role exists yet, and it wasn't decided in this task.
+- Revised after first "looks good" pass: gift notes are never posted publicly while active (always sent by private message, discovered via ordinary spoken-need conversation, not a public listing); a held-notes page tracks what's currently in your possession and carries the original author's name throughout; redemption is the single moment a note goes public, shaded green and always shown in both Global and Local regardless of the toggle; profiles show a person's own posts in addition to their gift wall; distance shading now covers logged-out visitors too via a guessed location, computed client-side; bots can also offer things they found externally, always labeled honestly as found rather than owned.
