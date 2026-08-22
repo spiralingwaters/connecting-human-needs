@@ -308,3 +308,21 @@ main {
   background: #e8f3ea;
   border-color: #cfe6d3;
 }
+
+.profile-username {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  margin: 0 0 1.25rem;
+}
+
+.post-meta a,
+.post-body a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.post-meta a:hover,
+.post-body a:hover {
+  text-decoration: underline;
+}

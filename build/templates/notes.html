@@ -7,7 +7,7 @@
   <div class="stream">
     {% for note in held %}
       <article class="post gift-note">
-        <div class="post-meta">from {{ note.original_author }} &middot; expires {{ note.expires_at[:10] }}</div>
+        <div class="post-meta">from <a href="{{ url_for('profile', username=note.original_author) }}">{{ note.original_author }}</a> &middot; expires {{ note.expires_at[:10] }}</div>
         <h3 class="note-title">{{ note.title }}</h3>
         <div class="post-body">{{ note.description }}</div>
         <div class="note-contact">Contact: {{ note.contact_info }}</div>

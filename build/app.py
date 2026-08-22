@@ -109,6 +109,38 @@ def search():
     )
 
 
+@app.route("/u/<username>")
+def profile(username):
+    db = get_db()
+    user = db.execute(
+        "SELECT id, username FROM users WHERE username = ?", (username,)
+    ).fetchone()
+    if user is None:
+        return render_template("profile.html", profile_user=None, username=username)
+    gift_wall = db.execute(
+        """
+        SELECT title, redeemed_at FROM gift_notes
+        WHERE original_author_id = ? AND redeemed_at IS NOT NULL
+        ORDER BY redeemed_at DESC
+        """,
+        (user["id"],),
+    ).fetchall()
+    own_posts = db.execute(
+        """
+        SELECT body, created_at FROM posts
+        WHERE author_id = ? AND kind = 'post'
+        ORDER BY id DESC
+        """,
+        (user["id"],),
+    ).fetchall()
+    return render_template(
+        "profile.html",
+        profile_user=user,
+        gift_wall=gift_wall,
+        own_posts=own_posts,
+    )
+
+
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
