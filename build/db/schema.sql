@@ -70,3 +70,14 @@ CREATE TABLE IF NOT EXISTS messages (
     body       TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
+
+-- A silent, per-viewer filter only — never a platform-wide score or
+-- punishment (Mission.md). Every query respecting a block must scope to
+-- "as viewed by the current logged-in user," never a global exclusion.
+CREATE TABLE IF NOT EXISTS blocks (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    blocker_id INTEGER NOT NULL REFERENCES users(id),
+    blocked_id INTEGER NOT NULL REFERENCES users(id),
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    UNIQUE (blocker_id, blocked_id)
+);

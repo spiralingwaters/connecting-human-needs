@@ -8,6 +8,18 @@
   {% else %}
     <h1 class="profile-username">{{ profile_user.username }}</h1>
 
+    {% if can_block %}
+      {% if blocked %}
+        <form method="post" action="{{ url_for('unblock_user', username=profile_user.username) }}">
+          <button type="submit" class="link-button">Unblock</button>
+        </form>
+      {% else %}
+        <form method="post" action="{{ url_for('block_user', username=profile_user.username) }}">
+          <button type="submit" class="link-button">Block</button>
+        </form>
+      {% endif %}
+    {% endif %}
+
     <h2 class="tier-label">Gift wall</h2>
     <div class="stream">
       {% for note in gift_wall %}

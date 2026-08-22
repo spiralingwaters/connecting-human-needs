@@ -72,9 +72,22 @@ def index():
         "SELECT value FROM site_meta WHERE key = 'tagline'"
     ).fetchone()
     tagline = row["value"] if row else ""
-    posts = db.execute(
-        "SELECT author_name, body, kind, created_at FROM posts ORDER BY id DESC"
-    ).fetchall()
+    viewer = current_user()
+    if viewer is None:
+        posts = db.execute(
+            "SELECT author_name, body, kind, created_at FROM posts ORDER BY id DESC"
+        ).fetchall()
+    else:
+        posts = db.execute(
+            """
+            SELECT author_name, body, kind, created_at FROM posts
+            WHERE author_id IS NULL OR author_id NOT IN (
+                SELECT blocked_id FROM blocks WHERE blocker_id = ?
+            )
+            ORDER BY id DESC
+            """,
+            (viewer["id"],),
+        ).fetchall()
     return render_template("index.html", tagline=tagline, posts=posts)
 
 
@@ -85,9 +98,22 @@ def search():
     tiers = [[], [], []]
     if terms:
         db = get_db()
-        posts = db.execute(
-            "SELECT author_name, body, created_at FROM posts ORDER BY id DESC"
-        ).fetchall()
+        viewer = current_user()
+        if viewer is None:
+            posts = db.execute(
+                "SELECT author_name, body, created_at FROM posts ORDER BY id DESC"
+            ).fetchall()
+        else:
+            posts = db.execute(
+                """
+                SELECT author_name, body, created_at FROM posts
+                WHERE author_id IS NULL OR author_id NOT IN (
+                    SELECT blocked_id FROM blocks WHERE blocker_id = ?
+                )
+                ORDER BY id DESC
+                """,
+                (viewer["id"],),
+            ).fetchall()
         term_count = len(terms)
         for post in posts:
             haystack = (post["author_name"] + " " + post["body"]).lower()
@@ -200,17 +226,43 @@ def thread(thread_id):
         return redirect(url_for("thread", thread_id=thread_id))
     other_id = thread_other_user(t, user["id"])
     other = db.execute("SELECT username FROM users WHERE id = ?", (other_id,)).fetchone()
-    history = db.execute(
-        """
-        SELECT messages.body, messages.created_at, users.username AS sender
-        FROM messages JOIN users ON users.id = messages.sender_id
-        WHERE thread_id = ? ORDER BY messages.id ASC
-        """,
-        (thread_id,),
-    ).fetchall()
+    block = db.execute(
+        "SELECT created_at FROM blocks WHERE blocker_id = ? AND blocked_id = ?",
+        (user["id"], other_id),
+    ).fetchone()
+    if block is None:
+        history = db.execute(
+            """
+            SELECT messages.body, messages.created_at, users.username AS sender
+            FROM messages JOIN users ON users.id = messages.sender_id
+            WHERE thread_id = ? ORDER BY messages.id ASC
+            """,
+            (thread_id,),
+        ).fetchall()
+    else:
+        history = db.execute(
+            """
+            SELECT messages.body, messages.created_at, users.username AS sender
+            FROM messages JOIN users ON users.id = messages.sender_id
+            WHERE thread_id = ?
+              AND (messages.sender_id != ? OR messages.created_at <= ?)
+            ORDER BY messages.id ASC
+            """,
+            (thread_id, other_id, block["created_at"]),
+        ).fetchall()
     return render_template(
         "thread.html", thread_id=thread_id, other_username=other["username"], history=history
     )
+
+
+def is_blocked_by_viewer(db, viewer_id, other_id):
+    if viewer_id is None:
+        return False
+    row = db.execute(
+        "SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ?",
+        (viewer_id, other_id),
+    ).fetchone()
+    return row is not None
 
 
 @app.route("/u/<username>")
@@ -221,28 +273,73 @@ def profile(username):
     ).fetchone()
     if user is None:
         return render_template("profile.html", profile_user=None, username=username)
-    gift_wall = db.execute(
-        """
-        SELECT title, redeemed_at FROM gift_notes
-        WHERE original_author_id = ? AND redeemed_at IS NOT NULL
-        ORDER BY redeemed_at DESC
-        """,
-        (user["id"],),
-    ).fetchall()
-    own_posts = db.execute(
-        """
-        SELECT body, created_at FROM posts
-        WHERE author_id = ? AND kind = 'post'
-        ORDER BY id DESC
-        """,
-        (user["id"],),
-    ).fetchall()
+    viewer = current_user()
+    blocked = is_blocked_by_viewer(db, viewer["id"] if viewer else None, user["id"])
+    if blocked:
+        gift_wall = []
+        own_posts = []
+    else:
+        gift_wall = db.execute(
+            """
+            SELECT title, redeemed_at FROM gift_notes
+            WHERE original_author_id = ? AND redeemed_at IS NOT NULL
+            ORDER BY redeemed_at DESC
+            """,
+            (user["id"],),
+        ).fetchall()
+        own_posts = db.execute(
+            """
+            SELECT body, created_at FROM posts
+            WHERE author_id = ? AND kind = 'post'
+            ORDER BY id DESC
+            """,
+            (user["id"],),
+        ).fetchall()
+    can_block = viewer is not None and viewer["id"] != user["id"]
     return render_template(
         "profile.html",
         profile_user=user,
         gift_wall=gift_wall,
         own_posts=own_posts,
+        can_block=can_block,
+        blocked=blocked,
     )
+
+
+@app.route("/u/<username>/block", methods=["POST"])
+def block_user(username):
+    viewer = current_user()
+    if viewer is None:
+        return redirect(url_for("login"))
+    db = get_db()
+    target = db.execute(
+        "SELECT id FROM users WHERE username = ?", (username,)
+    ).fetchone()
+    if target is not None and target["id"] != viewer["id"]:
+        db.execute(
+            "INSERT OR IGNORE INTO blocks (blocker_id, blocked_id) VALUES (?, ?)",
+            (viewer["id"], target["id"]),
+        )
+        db.commit()
+    return redirect(url_for("profile", username=username))
+
+
+@app.route("/u/<username>/unblock", methods=["POST"])
+def unblock_user(username):
+    viewer = current_user()
+    if viewer is None:
+        return redirect(url_for("login"))
+    db = get_db()
+    target = db.execute(
+        "SELECT id FROM users WHERE username = ?", (username,)
+    ).fetchone()
+    if target is not None:
+        db.execute(
+            "DELETE FROM blocks WHERE blocker_id = ? AND blocked_id = ?",
+            (viewer["id"], target["id"]),
+        )
+        db.commit()
+    return redirect(url_for("profile", username=username))
 
 
 @app.route("/signup", methods=["GET", "POST"])
