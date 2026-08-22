@@ -17,7 +17,7 @@
 
     <form class="compose-form" method="post" action="{{ url_for('signup') }}" id="signupForm">
       <label for="username">Username</label>
-      <input type="text" id="username" name="username" required maxlength="40">
+      <input type="text" id="username" name="username" required maxlength="40" value="{{ username or '' }}">
       {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
 
       <div class="draw-toolbar">
@@ -123,7 +123,18 @@
       document.getElementById('imageDataField').value = canvas.toDataURL('image/png');
     });
 
-    resetCanvas();
+    const restoredImage = {{ (image_data_url or '')|tojson }};
+    if (restoredImage) {
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        document.getElementById('imageDataField').value = restoredImage;
+      };
+      img.src = restoredImage;
+    } else {
+      resetCanvas();
+    }
   </script>
   {% endif %}
 {% endblock %}

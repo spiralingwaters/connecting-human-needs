@@ -557,9 +557,9 @@ def signup():
         username = request.form.get("username", "").strip()
         image_data_url = request.form.get("image_data", "")
         if not username:
-            return render_template("signup.html", error="Enter a username.")
+            return render_template("signup.html", error="Enter a username.", image_data_url=image_data_url)
         if not image_data_url.startswith("data:image/png;base64,"):
-            return render_template("signup.html", error="Draw your ID first.")
+            return render_template("signup.html", error="Draw your ID first.", username=username)
         import base64
 
         png_bytes = base64.b64decode(image_data_url.split(",", 1)[1])
@@ -567,12 +567,17 @@ def signup():
 
         db = get_db()
         if db.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone():
-            return render_template("signup.html", error="That username is taken.")
+            return render_template(
+                "signup.html", error="That username is taken.", username=username, image_data_url=image_data_url
+            )
         if db.execute(
             "SELECT id FROM users WHERE image_hash = ?", (image_hash,)
         ).fetchone():
             return render_template(
-                "signup.html", error="That exact drawing is already claimed — draw something a little different."
+                "signup.html",
+                error="That exact drawing is already claimed — draw something a little different.",
+                username=username,
+                image_data_url=image_data_url,
             )
 
         cur = db.execute(

@@ -1,6 +1,6 @@
 # Feature Summary
 
-User testing for small fixes
+User sign-up testing (small fixes) — name decided in hindsight once this task closes
 
 ## Description
 
@@ -15,5 +15,6 @@ All 22 features in FeaturesList.md are built and checked off. The user is now do
 ## Done
 
 - Moved the "That username is taken" signup error to render directly under the username input instead of above the whole form.
+- Fixed the drawn ID picture disappearing on a failed signup (taken username, taken drawing, etc.) — the server now hands the submitted username and drawing back, and the canvas restores the drawing instead of resetting blank.
 
 ## Details
