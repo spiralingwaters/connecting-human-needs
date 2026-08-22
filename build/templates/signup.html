@@ -13,12 +13,12 @@
     <a id="downloadLink" download="my-id.png" href="{{ image_data_url }}" style="display:none;"></a>
     <script>document.getElementById('downloadLink').click();</script>
   {% else %}
-    {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
     <p class="placeholder">Pick a username, then draw your ID below (write your name on the dotted line, doodle a face in the square). This is a plain stand-in for real security — there's no recovery, so keep the exported image safe.</p>
 
     <form class="compose-form" method="post" action="{{ url_for('signup') }}" id="signupForm">
       <label for="username">Username</label>
       <input type="text" id="username" name="username" required maxlength="40">
+      {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
 
       <div class="draw-toolbar">
         <div class="swatches" id="swatches">
