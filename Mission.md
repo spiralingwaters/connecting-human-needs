@@ -24,6 +24,7 @@ Nothing built here may harm anyone. That outranks everything else written above.
 - **Giving is visible, receiving is private.** A profile shows what a person has offered and passed along, never what they've taken. This deliberately inverts the money world, where wealth is displayed and need is shameful.
 - Notes can be passed **openly or quietly**; both are equally real.
 - Wiggle room lives in **quality, not quantity** — people naturally save bigger notes for those they know pass things on.
+- **The website is a courtesy layer, not the source of truth.** A note can be received and redeemed entirely off-site with nothing reported back — trust travels one link of the chain at a time (the giver trusts the specific person they gave to; the next receiver just sees that person circulating and infers they aren't hoarding). Nothing about the platform should ever need to be true for the system to work.
 
 ### What Circulates
 

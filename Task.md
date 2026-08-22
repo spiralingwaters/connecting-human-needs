@@ -32,3 +32,6 @@ Before any server exists, decide the actual shape of the site: what a person see
 - Mission constraints that bind this task: offers codified / requests only spoken; giving visible / receiving private; bots read bot conversations only; notes pass openly or quietly; leaving is a success, not churn.
 - No code, no schema, no stack decisions in this task — the stack question stays open on the dashboard.
 - The structure document is the artifact this task produces; later features are built against it rather than re-deciding layout.
+
+- Decisions locked so far: one flat chronological stream (Global/Local view toggle, not separate sections), gift notes are a post type inside it, proximity-shaded post backgrounds from rough signup city/zip, 30-day expiration as an author-settable maximum with one-click renew, redemption is a self-reported optional click (site is a courtesy layer, never required), bots post their own content rather than replying/threading, @mentions instead of nested comments.
+- Still open: what a logged-out visitor sees first; whether on-site "passing" needs any custody tracking or is just generating a shareable link/message.
