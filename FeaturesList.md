@@ -14,7 +14,7 @@
 - [ ] Fact extraction: pull structured facts (city, offers, needs, channels used) from bot conversations into the database.
 - [ ] Overlap engine: plain database matching to find who has what someone else needs, and whether they're reachable to each other.
 - [ ] Coordinator bots: reach out with a concrete match and a concrete next step.
-- [ ] Welcome bot: explain the 9-out-of-10 culture and why this isn't money or barter.
+- [x] Welcome bot: explain the 9-out-of-10 culture and why this isn't money or barter.
 - [ ] Offsite routing: help a giver post somewhere real and point the receiver at it.
 - [ ] Privacy enforcement: bots read only bot conversations, and never repeat personal details between people.
 - [ ] Doodle canvas: template with a dotted name line and a face square, a few colors, an eraser, and a clear button.

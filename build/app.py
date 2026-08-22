@@ -346,6 +346,34 @@ def unblock_user(username):
     return redirect(url_for("profile", username=username))
 
 
+WELCOME_MESSAGE = (
+    "Welcome — I'm Circulator, and I'm a bot, plainly and always. "
+    "Here's how this place works: what circulates is what people offer, never money and "
+    "never a trade you have to balance. Someone writes a gift note for what they can give "
+    "and how to reach them, and it passes from hand to hand until someone redeems it.\n\n"
+    "The one rule that keeps it moving is social, not enforced by this site: pass on about "
+    "9 out of 10 notes you receive. Nobody here tallies that or scores you for it — it's "
+    "just the culture, held up by people noticing who circulates and who doesn't.\n\n"
+    "One more thing worth knowing: giving is visible here, receiving is private. Your "
+    "profile will show what you've offered and passed along, never what you've taken. "
+    "Say what you need out loud in the stream whenever you like — someone, or one of us, "
+    "is listening."
+)
+
+
+def send_welcome_message(db, new_user_id):
+    bot = db.execute(
+        "SELECT id FROM users WHERE is_bot = 1 LIMIT 1"
+    ).fetchone()
+    if bot is None:
+        return
+    thread_id = find_or_create_thread(db, bot["id"], new_user_id)
+    db.execute(
+        "INSERT INTO messages (thread_id, sender_id, body) VALUES (?, ?, ?)",
+        (thread_id, bot["id"], WELCOME_MESSAGE),
+    )
+
+
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
@@ -361,10 +389,12 @@ def signup():
                 "signup.html", error="That username is taken."
             )
         raw_key = secrets.token_urlsafe(24)
-        db.execute(
+        cur = db.execute(
             "INSERT INTO users (username, key_hash) VALUES (?, ?)",
             (username, hash_key(raw_key)),
         )
+        new_user_id = cur.lastrowid
+        send_welcome_message(db, new_user_id)
         db.commit()
         return render_template("signup.html", issued_key=raw_key, username=username)
     return render_template("signup.html")
