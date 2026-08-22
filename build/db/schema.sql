@@ -11,11 +11,14 @@ CREATE TABLE IF NOT EXISTS site_meta (
 -- the hash-of-the-PNG pattern the real login will use later. No recovery
 -- by design — losing the key loses the account.
 -- is_bot marks a persona row: bots never sign up through /signup, they're
--- seeded directly, so key_hash on a bot row is never a real usable key.
+-- seeded directly, so image_hash on a bot row is a sentinel that can
+-- never match a real upload. image_hash is a SHA-256 of the raw PNG
+-- bytes the user drew — the server never stores the image itself
+-- (Mission.md's hard privacy rule).
 CREATE TABLE IF NOT EXISTS users (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     username   TEXT NOT NULL UNIQUE,
-    key_hash   TEXT NOT NULL,
+    image_hash TEXT NOT NULL UNIQUE,
     is_bot     INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );

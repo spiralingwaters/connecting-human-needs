@@ -3,37 +3,127 @@
 {% block title %}Sign up — Connecting Human Needs{% endblock %}
 
 {% block content %}
-  {% if issued_key %}
+  {% if claimed %}
     <p class="warning">
-      This is your account key for <strong>{{ username }}</strong>. Copy it and keep it
-      somewhere safe — this is a placeholder stand-in for the real login, it is
-      <strong>not secure</strong>, and there is no recovery: lose this key and you lose the
-      account.
+      Account claimed for <strong>{{ username }}</strong>. Your download should start automatically —
+      keep that PNG safe: it's your login, and there's no recovery if you lose it.
     </p>
-    <div class="key-reveal">
-      <code id="issued-key">{{ issued_key }}</code>
-      <button type="button" class="copy-key" data-copy-target="issued-key">Copy</button>
-    </div>
+    <img id="claimedPreview" src="{{ image_data_url }}" alt="your ID" style="max-width:240px;border:1px solid #e4e2da;border-radius:8px;">
     <p><a href="{{ url_for('login') }}">Continue to log in</a></p>
+    <a id="downloadLink" download="my-id.png" href="{{ image_data_url }}" style="display:none;"></a>
+    <script>document.getElementById('downloadLink').click();</script>
   {% else %}
     {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
-    <form class="compose-form" method="post" action="{{ url_for('signup') }}">
+    <p class="placeholder">Pick a username, then draw your ID below (write your name on the dotted line, doodle a face in the square). This is a plain stand-in for real security — there's no recovery, so keep the exported image safe.</p>
+
+    <form class="compose-form" method="post" action="{{ url_for('signup') }}" id="signupForm">
       <label for="username">Username</label>
       <input type="text" id="username" name="username" required maxlength="40">
-      <button type="submit">Sign up</button>
+
+      <div class="draw-toolbar">
+        <div class="swatches" id="swatches">
+          <button type="button" class="swatch" data-color="#141413" style="background:#141413" aria-label="black"></button>
+          <button type="button" class="swatch" data-color="#a4382f" style="background:#a4382f" aria-label="red"></button>
+          <button type="button" class="swatch" data-color="#3a6b52" style="background:#3a6b52" aria-label="green"></button>
+          <button type="button" class="swatch" data-color="#2f5fa4" style="background:#2f5fa4" aria-label="blue"></button>
+          <button type="button" class="swatch" data-color="#a4742f" style="background:#a4742f" aria-label="orange"></button>
+          <button type="button" class="swatch" data-color="#7a3fa0" style="background:#7a3fa0" aria-label="purple"></button>
+        </div>
+        <button type="button" id="eraserBtn" class="tool-btn">Eraser</button>
+        <button type="button" id="clearBtn" class="tool-btn">Clear</button>
+      </div>
+
+      <canvas id="idCanvas" width="1200" height="1200"></canvas>
+      <input type="hidden" name="image_data" id="imageDataField">
+      <button type="submit">Claim &amp; download my ID</button>
     </form>
   {% endif %}
 {% endblock %}
 
 {% block scripts %}
+  {% if not claimed %}
   <script>
-    document.querySelectorAll("[data-copy-target]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const text = document.getElementById(btn.dataset.copyTarget).textContent;
-        navigator.clipboard.writeText(text).then(() => {
-          btn.textContent = "Copied";
-        });
-      });
+    const canvas = document.getElementById('idCanvas');
+    const ctx = canvas.getContext('2d');
+    let activeColor = '#141413';
+    let erasing = false;
+    let drawing = false;
+    const scale = canvas.width / 480;
+
+    function drawTemplate() {
+      ctx.save();
+      ctx.strokeStyle = '#c9c5b8';
+      ctx.lineWidth = 2 * scale;
+      ctx.strokeRect(140 * scale, 40 * scale, 200 * scale, 200 * scale);
+      ctx.setLineDash([6 * scale, 6 * scale]);
+      ctx.beginPath();
+      ctx.moveTo(40 * scale, 400 * scale);
+      ctx.lineTo(440 * scale, 400 * scale);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function resetCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawTemplate();
+    }
+
+    function pointerPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (canvas.width / rect.width),
+        y: (e.clientY - rect.top) * (canvas.height / rect.height),
+      };
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      drawing = true;
+      const p = pointerPos(e);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      canvas.setPointerCapture(e.pointerId);
     });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!drawing) return;
+      const p = pointerPos(e);
+      ctx.lineWidth = (erasing ? 18 : 4) * scale;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = erasing ? '#ffffff' : activeColor;
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    });
+
+    function stopDrawing() {
+      drawing = false;
+    }
+    canvas.addEventListener('pointerup', stopDrawing);
+    canvas.addEventListener('pointercancel', stopDrawing);
+    canvas.addEventListener('pointerleave', stopDrawing);
+
+    document.getElementById('swatches').addEventListener('click', (e) => {
+      const btn = e.target.closest('.swatch');
+      if (!btn) return;
+      activeColor = btn.dataset.color;
+      erasing = false;
+      document.getElementById('eraserBtn').classList.remove('active');
+      document.querySelectorAll('.swatch').forEach((s) => s.classList.toggle('active', s === btn));
+    });
+
+    document.getElementById('eraserBtn').addEventListener('click', () => {
+      erasing = !erasing;
+      document.getElementById('eraserBtn').classList.toggle('active', erasing);
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', resetCanvas);
+
+    document.getElementById('signupForm').addEventListener('submit', () => {
+      document.getElementById('imageDataField').value = canvas.toDataURL('image/png');
+    });
+
+    resetCanvas();
   </script>
+  {% endif %}
 {% endblock %}

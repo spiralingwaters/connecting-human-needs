@@ -47,10 +47,6 @@ def init_db():
     db.close()
 
 
-def hash_key(raw_key):
-    return hashlib.sha256(raw_key.encode("utf-8")).hexdigest()
-
-
 def current_user():
     user_id = session.get("user_id")
     if user_id is None:
@@ -514,45 +510,69 @@ def draw_id():
     return render_template("draw.html")
 
 
+AVATAR_DIR = os.path.join(BASE_DIR, "static", "avatars")
+# Face-square crop region, in the 1200x1200 export canvas's coordinate
+# space (draw.html: strokeRect(140*scale, 40*scale, 200*scale, 200*scale)
+# with scale = 1200/480 = 2.5).
+FACE_SQUARE_BOX = (350, 100, 850, 600)
+AVATAR_SIZE = 96
+
+
+def derive_avatar(png_bytes, user_id):
+    """Crop the face-square region out of the raw drawing and save a small
+    avatar file. The raw bytes themselves are never written to disk —
+    only this derived crop persists (Mission.md's hard privacy rule)."""
+    from PIL import Image
+    import io
+
+    os.makedirs(AVATAR_DIR, exist_ok=True)
+    img = Image.open(io.BytesIO(png_bytes)).convert("RGB")
+    cropped = img.crop(FACE_SQUARE_BOX)
+    cropped = cropped.resize((AVATAR_SIZE, AVATAR_SIZE))
+    cropped.save(os.path.join(AVATAR_DIR, f"{user_id}.png"))
+
+
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
+        image_data_url = request.form.get("image_data", "")
         if not username:
             return render_template("signup.html", error="Enter a username.")
+        if not image_data_url.startswith("data:image/png;base64,"):
+            return render_template("signup.html", error="Draw your ID first.")
+        import base64
+
+        png_bytes = base64.b64decode(image_data_url.split(",", 1)[1])
+        image_hash = hashlib.sha256(png_bytes).hexdigest()
+
         db = get_db()
-        existing = db.execute(
-            "SELECT id FROM users WHERE username = ?", (username,)
-        ).fetchone()
-        if existing:
+        if db.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone():
+            return render_template("signup.html", error="That username is taken.")
+        if db.execute(
+            "SELECT id FROM users WHERE image_hash = ?", (image_hash,)
+        ).fetchone():
             return render_template(
-                "signup.html", error="That username is taken."
+                "signup.html", error="That exact drawing is already claimed — draw something a little different."
             )
-        raw_key = secrets.token_urlsafe(24)
+
         cur = db.execute(
-            "INSERT INTO users (username, key_hash) VALUES (?, ?)",
-            (username, hash_key(raw_key)),
+            "INSERT INTO users (username, image_hash) VALUES (?, ?)",
+            (username, image_hash),
         )
         new_user_id = cur.lastrowid
+        derive_avatar(png_bytes, new_user_id)
         send_welcome_message(db, new_user_id)
         db.commit()
-        return render_template("signup.html", issued_key=raw_key, username=username)
+        return render_template("signup.html", claimed=True, username=username, image_data_url=image_data_url)
     return render_template("signup.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":
-        raw_key = request.form.get("key", "").strip()
-        db = get_db()
-        user = db.execute(
-            "SELECT id FROM users WHERE key_hash = ?", (hash_key(raw_key),)
-        ).fetchone()
-        if user is None:
-            return render_template("login.html", error="Key not recognized.")
-        session["user_id"] = user["id"]
-        return redirect(url_for("index"))
-    return render_template("login.html")
+    return render_template(
+        "login.html", error="Login is being rebuilt for the new PNG identity system — check back shortly."
+    )
 
 
 @app.route("/notes")

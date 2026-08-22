@@ -8,9 +8,12 @@ person to another beyond a self-stated offer and a username.
 
 Run: python3 build/test_privacy.py
 """
+import base64
+import io
 import os
 import re
 import shutil
+import sqlite3
 import sys
 import tempfile
 
@@ -26,10 +29,31 @@ def make_client(tmpdir, tag):
     return appmod.app.test_client()
 
 
+def fake_id_png(seed_text):
+    """A tiny unique PNG standing in for a real hand-drawn ID, so each
+    test user gets a distinct image_hash."""
+    from PIL import Image, ImageDraw
+
+    img = Image.new("RGB", (16, 16), "white")
+    draw = ImageDraw.Draw(img)
+    draw.text((0, 0), seed_text[:2], fill="black")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
 def signup_and_login(client, username):
-    r = client.post("/signup", data={"username": username})
-    key = re.search(r'<code id="issued-key">([^<]+)</code>', r.get_data(as_text=True)).group(1)
-    client.post("/login", data={"key": key})
+    """Signs up via the real PNG-based /signup flow, then sets the
+    session directly (session_transaction) rather than through /login —
+    Login is being rebuilt in the very next task and isn't functional
+    yet at this point in the project's history."""
+    client.post("/signup", data={"username": username, "image_data": fake_id_png(username)})
+    db = sqlite3.connect(appmod.DB_PATH)
+    db.row_factory = sqlite3.Row
+    user_id = db.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone()["id"]
+    db.close()
+    with client.session_transaction() as sess:
+        sess["user_id"] = user_id
 
 
 def bot_thread_id(client):

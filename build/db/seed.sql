@@ -5,9 +5,10 @@ INSERT INTO posts (author_name, body)
 SELECT 'welcome', 'Welcome to the stream — say what you need and what you have.'
 WHERE NOT EXISTS (SELECT 1 FROM posts);
 
--- Seeded bot persona: no real key, since bots never sign up through
--- /signup and nothing ever needs to log in as one.
-INSERT INTO users (username, key_hash, is_bot)
+-- Seeded bot persona: a sentinel image_hash (not a real SHA-256 hex
+-- digest) since bots never sign up through /signup and nothing ever
+-- needs to log in as one.
+INSERT INTO users (username, image_hash, is_bot)
 SELECT 'circulator', 'no-login-bot-account', 1
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'circulator');
 
