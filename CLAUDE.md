@@ -19,9 +19,11 @@ Start each session by looking at these files in this order:
 - `Mission.md` to see what the overall mission is.
 - `FeaturesList.md` which contains a checkmark list of features which only get checked off after the feature has been both added and successfully tested. (This is like the overview checklist that guides the overall project.)
 - `Task.md` is like the short-term memory that keeps track of the current feature being implemented, and keeps track of what sub-tasks have been done, or need to be done.
-- Run `artifacts/generate_file_browser.py` to refresh `artifacts/file_browser.html`, the clickable browser of every file in the repo on the current branch.
+- Refresh `artifacts/file_browser.html` (the clickable browser of every file in the repo on the current branch) — ⚠️ **NEVER run `artifacts/generate_file_browser.py` as step one.** Write the summaries into `artifacts/content_overrides.json` FIRST, THEN run the script. See "artifacts/file_browser.html" below for the exact two-step order — do not skip straight to running the script.
 
 ## artifacts/file_browser.html
+
+⚠️ **STOP — READ BEFORE RUNNING THE SCRIPT.** The single most common mistake here is running `generate_file_browser.py` before writing the summaries. Every regeneration is ALWAYS two steps, in this order, no exceptions: (1) write `artifacts/content_overrides.json`, (2) run the script. Never run the script first "and go back and redo it properly" — check `content_overrides.json` has real content for this run BEFORE calling the script, not after.
 
 - `artifacts/generate_file_browser.py` is purely programmatic: it reads every git-tracked file's raw contents plus the current branch name and dumps them into `artifacts/file_browser.html`. It never calls an LLM and never rewrites/summarizes anything itself.
 - The browser shows each file's full raw text by default, with a per-file "Summary / Full text" toggle that appears whenever a summary was baked in for that file — both are always reachable in the UI, never summary-only.
