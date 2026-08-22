@@ -10,10 +10,24 @@ CREATE TABLE IF NOT EXISTS site_meta (
 -- Only a hash of the random key is stored, never the key itself, mirroring
 -- the hash-of-the-PNG pattern the real login will use later. No recovery
 -- by design — losing the key loses the account.
+-- is_bot marks a persona row: bots never sign up through /signup, they're
+-- seeded directly, so key_hash on a bot row is never a real usable key.
 CREATE TABLE IF NOT EXISTS users (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     username   TEXT NOT NULL UNIQUE,
     key_hash   TEXT NOT NULL,
+    is_bot     INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+-- A bot persona's specialty + short prompt — the database is the bot's
+-- memory, not a context window (Mission.md). No live LLM call reads
+-- `prompt` yet; it's stored for when a later feature needs it.
+CREATE TABLE IF NOT EXISTS bot_personas (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id),
+    specialty  TEXT NOT NULL,
+    prompt     TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 

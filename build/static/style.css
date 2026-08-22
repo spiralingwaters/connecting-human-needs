@@ -309,6 +309,18 @@ main {
   border-color: #cfe6d3;
 }
 
+.bot-label {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--mono-tint, #efece0);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  vertical-align: middle;
+}
+
 .profile-username {
   font-family: "Cormorant Garamond", Georgia, serif;
   font-style: italic;

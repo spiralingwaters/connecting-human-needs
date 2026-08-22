@@ -146,9 +146,13 @@ def find_or_create_thread(db, user_a_id, user_b_id):
     ).fetchone()
     if thread is not None:
         return thread["id"]
-    cur = db.execute(
-        "INSERT INTO message_threads (user_a_id, user_b_id) VALUES (?, ?)",
+    is_bot_thread = db.execute(
+        "SELECT 1 FROM users WHERE id IN (?, ?) AND is_bot = 1",
         (user_a_id, user_b_id),
+    ).fetchone()
+    cur = db.execute(
+        "INSERT INTO message_threads (user_a_id, user_b_id, is_bot_thread) VALUES (?, ?, ?)",
+        (user_a_id, user_b_id, 1 if is_bot_thread else 0),
     )
     return cur.lastrowid
 
@@ -269,7 +273,7 @@ def is_blocked_by_viewer(db, viewer_id, other_id):
 def profile(username):
     db = get_db()
     user = db.execute(
-        "SELECT id, username FROM users WHERE username = ?", (username,)
+        "SELECT id, username, is_bot FROM users WHERE username = ?", (username,)
     ).fetchone()
     if user is None:
         return render_template("profile.html", profile_user=None, username=username)

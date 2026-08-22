@@ -10,7 +10,7 @@
 - [x] Profiles: show what a person has offered and passed along; never show what they've received.
 - [x] Private messaging between people, and with bots.
 - [x] Blocking: hide a blocked person's posts, profile, and gift wall from you, and stop their private messages to you — a personal filter, silent, never a platform-wide score or punishment.
-- [ ] Bot framework: personas with stable names, avatars, specialties, and small prompts.
+- [x] Bot framework: personas with stable names, avatars, specialties, and small prompts.
 - [ ] Fact extraction: pull structured facts (city, offers, needs, channels used) from bot conversations into the database.
 - [ ] Overlap engine: plain database matching to find who has what someone else needs, and whether they're reachable to each other.
 - [ ] Coordinator bots: reach out with a concrete match and a concrete next step.
