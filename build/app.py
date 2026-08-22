@@ -509,6 +509,11 @@ def send_welcome_message(db, new_user_id):
     )
 
 
+@app.route("/id/draw")
+def draw_id():
+    return render_template("draw.html")
+
+
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":

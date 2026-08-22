@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Draw your ID — Connecting Human Needs{% endblock %}
+
+{% block content %}
+  <p class="placeholder">Write your name on the dotted line and doodle a face in the square. This is your account — there's no password recovery, so keep the exported image safe.</p>
+
+  <div class="draw-toolbar">
+    <div class="swatches" id="swatches">
+      <button type="button" class="swatch" data-color="#141413" style="background:#141413" aria-label="black"></button>
+      <button type="button" class="swatch" data-color="#a4382f" style="background:#a4382f" aria-label="red"></button>
+      <button type="button" class="swatch" data-color="#3a6b52" style="background:#3a6b52" aria-label="green"></button>
+      <button type="button" class="swatch" data-color="#2f5fa4" style="background:#2f5fa4" aria-label="blue"></button>
+      <button type="button" class="swatch" data-color="#a4742f" style="background:#a4742f" aria-label="orange"></button>
+      <button type="button" class="swatch" data-color="#7a3fa0" style="background:#7a3fa0" aria-label="purple"></button>
+    </div>
+    <button type="button" id="eraserBtn" class="tool-btn">Eraser</button>
+    <button type="button" id="clearBtn" class="tool-btn">Clear</button>
+  </div>
+
+  <canvas id="idCanvas" width="480" height="480"></canvas>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    const canvas = document.getElementById('idCanvas');
+    const ctx = canvas.getContext('2d');
+    let activeColor = '#141413';
+    let erasing = false;
+    let drawing = false;
+
+    function drawTemplate() {
+      ctx.save();
+      ctx.strokeStyle = '#c9c5b8';
+      ctx.lineWidth = 2;
+      // Face square, upper portion.
+      ctx.strokeRect(140, 40, 200, 200);
+      // Dotted name line, lower third.
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(40, 400);
+      ctx.lineTo(440, 400);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function resetCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      drawTemplate();
+    }
+
+    function pointerPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (canvas.width / rect.width),
+        y: (e.clientY - rect.top) * (canvas.height / rect.height),
+      };
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      drawing = true;
+      const p = pointerPos(e);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      canvas.setPointerCapture(e.pointerId);
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!drawing) return;
+      const p = pointerPos(e);
+      ctx.lineWidth = erasing ? 18 : 4;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = erasing ? '#ffffff' : activeColor;
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    });
+
+    function stopDrawing() {
+      drawing = false;
+    }
+    canvas.addEventListener('pointerup', stopDrawing);
+    canvas.addEventListener('pointercancel', stopDrawing);
+    canvas.addEventListener('pointerleave', stopDrawing);
+
+    document.getElementById('swatches').addEventListener('click', (e) => {
+      const btn = e.target.closest('.swatch');
+      if (!btn) return;
+      activeColor = btn.dataset.color;
+      erasing = false;
+      document.getElementById('eraserBtn').classList.remove('active');
+      document.querySelectorAll('.swatch').forEach((s) => s.classList.toggle('active', s === btn));
+    });
+
+    document.getElementById('eraserBtn').addEventListener('click', () => {
+      erasing = !erasing;
+      document.getElementById('eraserBtn').classList.toggle('active', erasing);
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', resetCanvas);
+
+    resetCanvas();
+  </script>
+{% endblock %}
