@@ -17,9 +17,9 @@ Before any server exists, decide the actual shape of the site: what a person see
 
 ## To Do
 
-- Final sign-off from the user on the revised `SiteShape.md` (private-message-first gift note lifecycle, held-notes list, redeemed-always-global-and-green, guessed location for logged-out viewers, bots offering found things).
-
 ## Done
+
+- User signed off on `SiteShape.md` (via the dashboard's "Sign off on SiteShape.md" toggle) — feature checked off in `FeaturesList.md`.
 
 - Answered the open structural questions with the user (primary surface, where notes live, how bots appear, what a visitor sees first, blocking).
 - Drafted the page map: every section, what it holds, and every link between sections.
