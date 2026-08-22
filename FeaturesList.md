@@ -1,5 +1,6 @@
 # Features List
 
+- [ ] Site shape: what sections exist, how people move between them, where gift notes live, and how bots take part — decided and written down before code.
 - [ ] Project skeleton: server, database, and a single styled page that renders.
 - [ ] Placeholder identity: signup hands out a random key the user copies; pasting it back logs them in. A plain stand-in for the PNG login, never called security.
 - [ ] Public feed: post, read, and reply in the open.
