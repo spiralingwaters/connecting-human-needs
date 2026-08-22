@@ -78,6 +78,37 @@ def index():
     return render_template("index.html", tagline=tagline, posts=posts)
 
 
+@app.route("/search")
+def search():
+    query = request.args.get("q", "").strip()
+    terms = query.split()
+    tiers = [[], [], []]
+    if terms:
+        db = get_db()
+        posts = db.execute(
+            "SELECT author_name, body, created_at FROM posts ORDER BY id DESC"
+        ).fetchall()
+        term_count = len(terms)
+        for post in posts:
+            haystack = (post["author_name"] + " " + post["body"]).lower()
+            matched = sum(1 for t in terms if t.lower() in haystack)
+            if matched == 0:
+                continue
+            if matched == term_count:
+                tiers[0].append(post)
+            elif matched > 1:
+                tiers[1].append(post)
+            else:
+                tiers[2].append(post)
+    return render_template(
+        "search_results.html",
+        query=query,
+        all_match=tiers[0],
+        some_match=tiers[1],
+        one_match=tiers[2],
+    )
+
+
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Search — Connecting Human Needs{% endblock %}
+
+{% block content %}
+  <form class="search-form" method="get" action="{{ url_for('search') }}">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search the stream&hellip;" maxlength="200">
+    <button type="submit">Search</button>
+  </form>
+
+  {% if not query %}
+    <p class="placeholder">Enter a search term above.</p>
+  {% elif not (all_match or some_match or one_match) %}
+    <p class="placeholder">No results for &ldquo;{{ query }}&rdquo;.</p>
+  {% else %}
+    {% if all_match %}
+      <section class="search-tier tier-all">
+        <h2 class="tier-label">Matches all terms</h2>
+        <div class="stream">
+          {% for post in all_match %}
+            <article class="post">
+              <div class="post-meta">{{ post.author_name }} &middot; {{ post.created_at }}</div>
+              <div class="post-body">{{ post.body }}</div>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+    {% if some_match %}
+      <section class="search-tier tier-some">
+        <h2 class="tier-label">Matches some terms</h2>
+        <div class="stream">
+          {% for post in some_match %}
+            <article class="post">
+              <div class="post-meta">{{ post.author_name }} &middot; {{ post.created_at }}</div>
+              <div class="post-body">{{ post.body }}</div>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+    {% if one_match %}
+      <section class="search-tier tier-one">
+        <h2 class="tier-label">Matches one term</h2>
+        <div class="stream">
+          {% for post in one_match %}
+            <article class="post">
+              <div class="post-meta">{{ post.author_name }} &middot; {{ post.created_at }}</div>
+              <div class="post-body">{{ post.body }}</div>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  {% endif %}
+{% endblock %}
