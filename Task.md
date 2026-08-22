@@ -1,24 +1,25 @@
 # Feature Summary
 
-- [ ] Overlap engine: plain database matching to find who has what someone else needs, and whether they're reachable to each other.
+- [ ] Coordinator bots: reach out with a concrete match and a concrete next step.
 
 ## Description
 
-Build the plain-SQL matching Mission.md describes explicitly as non-LLM work ("Overlap-finding is plain database work and word matching, which costs nothing"). Using the `user_facts` table Fact extraction populates, find pairs where one person's `needs` fact text overlaps (word-level) with another person's `offers` fact text — a simple word-overlap score, no embeddings, no external service. "Whether they're reachable to each other" just means: both users have to actually exist and not have blocked one another (reuse the `blocks` table from Blocking) — there's no location/proximity data yet (deferred since Public feed), so reachability here is purely "not blocked," not a distance check.
+Close the loop the Overlap engine opened: instead of only showing candidates on a page someone has to check, a bot proactively messages a person when a concrete overlap exists, per Mission.md ("Honest about being coordinated... no staged coincidences — a bot says plainly 'someone here is giving away a couch in your city, here's the link'"). The message is templated text (not live-LLM-generated, consistent with every other bot behavior built so far) that plainly states what was matched and a concrete next step: go start a conversation with that person. This task triggers on the same event Fact extraction already hooks: right after a `needs` fact is extracted from a message in a bot thread, immediately run the Overlap engine for that user and, for any new match found, have the bot send a follow-up message in that same bot thread naming the match and linking to `/messages/new` (or directly proposes starting a thread with that username).
 
-- A pure function/query, no new schema needed: `find_overlaps(db, user_id)` — for a given user's `needs` facts, scan every other user's `offers` facts, score by shared significant words (lowercased, simple stopword-free word-set intersection), return matches above a small threshold (at least one shared word), best-scoring first, excluding any pair where either has blocked the other.
-- This task builds the engine and a way to see it work (a small `/overlaps` page for a logged-in user showing their current candidate matches, read-only) — it does **not** send anything to anyone. Reaching out is explicitly Coordinator bots' job next; this task only finds and displays candidates.
-- Keep the scoring dead simple and explainable: split both fact values into lowercase word sets (dropping a short stopword list: a, an, the, to, for, and, of, in, i, need, needs, looking, have, offer, offering — the verb/filler words the extraction patterns themselves tend to capture), count shared words, require at least 1.
+- No new schema for the match itself, but avoid re-notifying about the same pair repeatedly: add a small `coordinator_notices` table (user_id, matched_username, offer_value, created_at) recording what's already been surfaced, so the same offer isn't re-announced to the same person every time they send another message.
+- After fact extraction inserts a `needs` fact, call `find_overlaps` for that user; for each match not already recorded in `coordinator_notices` (matched on user_id + matched_username + offer_value), have the bot post a message in the same bot thread: "Someone here is offering '<offer>' — that sounds like what you're after. Want to reach out? Start a conversation with @<username>." Then record it.
+- This only fires from a *human* message being posted to a *bot thread* that yields a new `needs` fact and at least one match — never a background job, matching the project's inline/no-worker pattern established by Fact extraction.
+- Out of scope: actually initiating a thread on the user's behalf (SiteShape.md keeps "reaches out" as the bot's own private message, but the actual person-to-person conversation still needs the human to choose to start it) — the bot's job is the concrete pointer, not doing the introduction on its own authority beyond that message.
 
 ## To Do
 
-## Done
+- Add `coordinator_notices` table to schema.sql.
+- After successful fact extraction in `thread()`'s POST handler, when a new `needs` fact was recorded, run `find_overlaps` and send a follow-up bot message (in the same thread) for each match not already in `coordinator_notices`; record each one sent.
+- Verify with a scripted test-client run: stating a need that matches an existing offer produces both the extracted fact and a coordinator follow-up message naming the offering username in the same bot thread; sending the same/similar need again doesn't re-send the same notice a second time; a need with no match produces no follow-up message.
 
-- Added `find_overlaps(db, user_id)` to app.py: joins the user's `needs` facts against other users' `offers` facts, scores by shared significant-word count, filters out blocked pairs (either direction), orders best-first.
-- Added `/overlaps` route (logged-in only) + template: lists candidate matches (other user's username, their matching offer text, the searching need text).
-- Verified with a scripted test-client run: a shared-word need/offer pair matches, an unrelated need finds nothing, blocking either party removes the match.
+## Done
 
 ## Details
 
-- Deliberately plain word-overlap, not any embedding/semantic similarity — matches Mission.md's explicit "costs nothing" framing for this piece.
-- Location/proximity weighting from SiteShape.md ("Weighs candidates near the original giver") isn't available yet (no geolocation data exists) — this task only builds the word-overlap half; proximity weighting is a follow-up once location data exists, flagged rather than silently skipped.
+- Templated, not live-LLM-generated — same choice made throughout the bot features so far (Bot framework, Welcome bot).
+- This task deliberately only fires on new `needs` facts, not new `offers` facts — matching the other direction (telling an existing offerer about a newly-arrived need) is a reasonable future enhancement but doubles the surface area and isn't required by the feature's wording ("reach out with a concrete match"), so it's left for later rather than silently expanded here.
