@@ -1,25 +1,24 @@
 # Feature Summary
 
-- [ ] Offsite routing: help a giver post somewhere real and point the receiver at it.
+- [ ] Privacy enforcement: bots read only bot conversations, and never repeat personal details between people.
 
 ## Description
 
-Per Mission.md ("Heavy things get routed offsite. The site holds no inventory and handles no logistics; it learns enough about two people to say 'go here, look now'"), this is assistance, not automation: the site cannot actually post to Craigslist or any third-party service on a user's behalf (no API integration is in scope, and fabricating one would misrepresent what the site does). What it *can* honestly do: help the giver produce good copy-paste-ready listing text from a gift note they've already written, and give the holder a real, working link to go look somewhere external. No geolocation exists yet (deferred since Public feed), so the "somewhere real" link is a generic external search — not a city-specific one — clearly labeled as such rather than pretending to be localized.
+Every bot-touching code path built so far (Fact extraction, Overlap engine, Coordinator bots) already happens to respect these rules, but only because each was written carefully by hand — nothing centrally enforces or tests it as an invariant. This task makes the rule explicit in code (a single guarded entry point bot logic must go through) and adds a dedicated test suite that would catch a regression if a future feature accidentally reads a human-to-human thread or leaks more than it should. This is a hardening/audit task, not new user-facing behavior.
 
-- On the held-note view (`/notes`), for each held note, add a "Get posting text" action: renders (no new route needed for viewing — a simple inline `<details>`/expand block populated server-side is enough) a copy-paste-ready listing built from the note's title/description/contact — this is for the *original author* to use if they want to also list the item somewhere with real reach (a local Craigslist/Facebook Marketplace/Freecycle post), not something the site submits anywhere itself.
-- On the same held-note view, add a "Look elsewhere too" link per note: a real, working URL to Craigslist's free-stuff search for the note's title (e.g. `https://www.craigslist.org/search/zip?query=<title>&sort=date` scoped to the "free" category via their search params) — since there's no user location yet, this omits a specific city (Craigslist's own site handles the "pick your region" step) rather than guessing one.
-- This is entirely presentational — no new DB table, no new route beyond what's needed to render the two pieces on the existing `/notes` page.
-- Being explicit about what this is *not*: not an integration, not an auto-post, not proof anything was actually listed anywhere. The copy-paste text is a convenience; the link is a real starting point, nothing more.
+- Add a small guard function, `assert_bot_thread(t)`, that raises if called on a thread where `is_bot_thread` is false. Wire it into the two places that currently read thread content for bot purposes (fact extraction and coordinator follow-up in `thread()`'s POST handler) so the "only bot threads" rule is enforced by code, not just by the `if t["is_bot_thread"]:` branch already there — belt and suspenders, since the branch guard already exists but nothing stops a future call site from skipping it.
+- Audit "never repeat personal details between people": check every bot-authored message text (Welcome bot's fixed text, Coordinator bots' follow-up) contains only (a) fixed copy, (b) the matched offer's own text (which its author chose to state as an offer — offers are meant to be public per Mission.md, "Offers are codified"), and (c) a username. Confirm nothing else about either party (their `needs` facts, their city, their other messages) ever appears in a bot-authored message headed to someone else. Document this as the specific check going forward for any future bot message template.
+- Add a dedicated test file/script (not just inline in a Task like previous features) covering: a coordinator notice never contains the *searcher's* own need-text verbatim beyond what they already said themselves in their own thread (i.e., it isn't echoed to a third party), fact extraction never runs against a human-to-human thread even if crafted input looks bot-like, and `assert_bot_thread` actually raises when misused.
 
 ## To Do
 
-## Done
+- Add `assert_bot_thread(t)` and wire it into fact-extraction and coordinator-follow-up code paths in `thread()`.
+- Write `build/test_privacy.py` (or similar) as a standalone scripted test file covering the invariants above, runnable via `python3 build/test_privacy.py` — first dedicated test file in the project (earlier features verified inline in the session, this one is worth keeping around to re-run).
+- Verify with a scripted test-client run (via the new test file): human-to-human threads never produce facts or coordinator notices no matter what's said in them; `assert_bot_thread` raises on a non-bot thread; no bot-authored message content includes anything beyond fixed copy, a self-stated offer, or a username.
 
-- Built the copy-paste listing text (title + description + contact) directly in `notes.html`'s template, inside a collapsed `<details>` block per held note.
-- Added a real Craigslist free-search link per note using the note's title as the query, with a plain-text caveat that it isn't city-specific since location data doesn't exist yet.
-- Verified with a scripted test-client run: `/notes` renders both the listing text and a well-formed, URL-encoded search link for a held note without erroring.
+## Done
 
 ## Details
 
-- No external API call, no scraping, no claim of automation — this is copy/paste assistance plus a real link, matching what the site can honestly do without an integration decision (which, like the LLM question, is an infrastructure/API choice left for later, not guessed at here).
-- Revisit once geolocation exists (Public feed's deferred proximity data) to make the external link city-specific.
+- This task doesn't change what already worked correctly — it adds enforcement and regression coverage for an invariant that held by construction, per the project's "build until it works, then check it actually serves the mission" step in Mission.md's How We Build.
+- The dedicated test file (rather than inline scratch tests like earlier tasks) is deliberate here: privacy invariants are exactly the kind of thing worth guarding against silent regressions as more bot features get added later.
