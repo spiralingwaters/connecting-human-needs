@@ -1,6 +1,7 @@
 # Features List
 
 - [ ] Project skeleton: server, database, and a single styled page that renders.
+- [ ] Placeholder identity: signup hands out a random key the user copies; pasting it back logs them in. A plain stand-in for the PNG login, never called security.
 - [ ] Public feed: post, read, and reply in the open.
 - [ ] Gift notes: write a note (what's offered, how to reach you), see it, pass it on.
 - [ ] Note passing: pass a note openly or quietly; the author is notified when it's redeemed, nobody else.
