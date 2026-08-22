@@ -1,24 +1,32 @@
 # Feature Summary
 
-- [ ] Privacy enforcement: bots read only bot conversations, and never repeat personal details between people.
+- [ ] Doodle canvas: template with a dotted name line and a face square, a few colors, an eraser, and a clear button.
 
 ## Description
 
-Every bot-touching code path built so far (Fact extraction, Overlap engine, Coordinator bots) already happens to respect these rules, but only because each was written carefully by hand — nothing centrally enforces or tests it as an invariant. This task makes the rule explicit in code (a single guarded entry point bot logic must go through) and adds a dedicated test suite that would catch a regression if a future feature accidentally reads a human-to-human thread or leaks more than it should. This is a hardening/audit task, not new user-facing behavior.
+Build the drawing surface Mission.md describes as the real login's core: "a template canvas with a dotted line for a name and a square for a face; a simple multi-color doodle tool." This task is purely the drawing UI — no export, no hashing, no signup wiring yet (those are the next three features). A plain HTML5 `<canvas>`, drawn with mouse/touch, with a faint permanent template layer (a dotted line near the bottom for the person to write their name over, and an outlined square for a face doodle) that stays visible under the drawing but isn't itself part of what gets exported as "drawn" content later — it's just a guide. A few color swatches to pick a pen color, an eraser toggle, and a clear button that wipes the user's drawing back to blank (template guide reappears). Keep this dead simple: no undo stack, no brush size slider, no layers — KISS.
 
-- Add a small guard function, `assert_bot_thread(t)`, that raises if called on a thread where `is_bot_thread` is false. Wire it into the two places that currently read thread content for bot purposes (fact extraction and coordinator follow-up in `thread()`'s POST handler) so the "only bot threads" rule is enforced by code, not just by the `if t["is_bot_thread"]:` branch already there — belt and suspenders, since the branch guard already exists but nothing stops a future call site from skipping it.
-- Audit "never repeat personal details between people": check every bot-authored message text (Welcome bot's fixed text, Coordinator bots' follow-up) contains only (a) fixed copy, (b) the matched offer's own text (which its author chose to state as an offer — offers are meant to be public per Mission.md, "Offers are codified"), and (c) a username. Confirm nothing else about either party (their `needs` facts, their city, their other messages) ever appears in a bot-authored message headed to someone else. Document this as the specific check going forward for any future bot message template.
-- Add a dedicated test file/script (not just inline in a Task like previous features) covering: a coordinator notice never contains the *searcher's* own need-text verbatim beyond what they already said themselves in their own thread (i.e., it isn't echoed to a third party), fact extraction never runs against a human-to-human thread even if crafted input looks bot-like, and `assert_bot_thread` actually raises when misused.
+- New route `/id/draw` (no login required — this happens *before* an account exists, per Mission.md's identity flow) rendering a canvas page.
+- Template guide: a dotted line roughly a third of the way up from the bottom (for the name) and an outlined square above it (for the face), drawn in a light, unobtrusive color directly onto the canvas as a non-erasable background layer (redrawn under the user's strokes any time the canvas is cleared or on load).
+- A small palette: 4-6 fixed colors (e.g. black, red, blue, green, plus maybe orange/purple) as clickable swatches, one active at a time.
+- An eraser toggle: switches the pen to erase (clear to background) instead of draw.
+- A clear button: wipes all user strokes, redraws just the template guide.
+- Pure client-side JS + canvas — no new DB table, no server-side drawing state; this page doesn't submit anything to the server yet (that's ID export next).
+- Works with both mouse and touch input (pointer events), since a phone is a very plausible way to draw this.
 
 ## To Do
 
-## Done
+- Add `/id/draw` route + `draw.html` template with a `<canvas>` element.
+- Draw the template guide (dotted name line + face square outline) as a background layer using canvas drawing calls in JS on load and after any clear.
+- Wire up freehand drawing via pointer events (pointerdown/pointermove/pointerup), respecting the active color.
+- Add color swatch buttons that set the active pen color.
+- Add an eraser toggle button that switches strokes to erase mode.
+- Add a clear button that wipes user strokes and redraws the template guide.
+- Manually verify in a browser (per the run/browser-testing guidance): drawing works with the mouse, color swatches change stroke color, eraser removes strokes without removing the template guide, clear resets to a blank template.
 
-- Added `assert_bot_thread(t)` and wired it into the fact-extraction/coordinator-follow-up code path in `thread()`.
-- Wrote `build/test_privacy.py` as a standalone, re-runnable test file (first dedicated test file in the project) covering the invariants.
-- Verified via `python3 build/test_privacy.py`: `assert_bot_thread` raises on a non-bot thread, bot-looking phrasing sent in a human-to-human thread produces no facts, and a coordinator notice never leaks a matched offerer's other private facts (e.g. contact info they never stated as part of the offer) into someone else's thread.
+## Done
 
 ## Details
 
-- This task doesn't change what already worked correctly — it adds enforcement and regression coverage for an invariant that held by construction, per the project's "build until it works, then check it actually serves the mission" step in Mission.md's How We Build.
-- The dedicated test file (rather than inline scratch tests like earlier tasks) is deliberate here: privacy invariants are exactly the kind of thing worth guarding against silent regressions as more bot features get added later.
+- No export/download yet — that's ID export, next feature. This task's canvas doesn't need to produce a file.
+- No login gate on this route — Mission.md's flow is draw first, then sign up with the drawing, so an account can't exist yet when this page is used.
