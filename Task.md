@@ -1,33 +1,28 @@
 # Feature Summary
 
-- [ ] Blocking: hide a blocked person's posts, profile, and gift wall from you, and stop their private messages to you — a personal filter, silent, never a platform-wide score or punishment.
+- [ ] Bot framework: personas with stable names, avatars, specialties, and small prompts.
 
 ## Description
 
-Build the personal filter SiteShape.md describes ("Blocking"): a one-directional table (blocker, blocked) with no platform-visible effect except on the blocker's own view. Blocking someone hides their posts from the blocker's stream view, empties their profile/gift wall *as seen by the blocker*, and stops new messages from them reaching the blocker (existing message history the blocker already has stays visible, per SiteShape.md). Critically: blocking never removes the blocked person's posts from *other people's* views, and other people's posts that `@mention` a blocked user are still visible to the blocker — blocking only removes what the blocked person themself posts/sends, not what others say about or to them. It's silent: the blocked person is never told. No platform score, no moderation action, no admin role — this is purely a per-viewer filter, matching Mission.md's "personal filter... never a platform-wide score or punishment."
+Build the structural home for bot personas: stable named identities with a specialty tag and a short prompt, stored in the database (per Mission.md: "the database is the memory, not the context window"). This task builds personas as data plus the plumbing to let them act (post to the stream, hold/route notes, message people) — it does **not** wire up a live LLM call. Storing a persona's "prompt" is exactly what Mission.md describes regardless of how replies eventually get generated, so this doesn't need to wait on an infrastructure decision (self-hosted model vs. an API) — that decision only matters once a bot needs to generate free-form natural-language text, which the later features (Welcome bot, Coordinator bots) can each address with a simple templated stand-in for now, same pattern already used for Placeholder identity and the notifications stand-in elsewhere in this project. A bot is a real row in `users` (so it can author posts, hold gift notes, and appear in `/messages` and `/u/<username>` like anyone else) flagged `is_bot`, plus a `bot_personas` row carrying the specialty and prompt. Bots never sign up through `/signup` — they're seeded directly (a small seed script/data), since there's no PNG/key-issuance ceremony for a persona.
 
-- DB: `blocks` table — id, blocker_id, blocked_id, created_at. Unique on (blocker_id, blocked_id).
-- `/u/<username>` gets a "Block" / "Unblock" toggle button, visible only when logged in and viewing someone else's profile.
-- Blocking effect, applied only to the blocker's own session/view:
-  - Stream (`/`, `/search`): posts authored by a blocked user are filtered out of the query for a logged-in viewer who has blocked them. (An `@mention` inside someone else's post text isn't itself a separate row to filter — SiteShape.md already frames this as "you still see other people's posts that @mention a blocked user," which naturally falls out of only filtering by the post's own author.)
-  - `/u/<username>` viewed by someone who blocked that user: gift wall and posts sections both render empty (matching "empties their profile and gift wall when you view it") — but the page still resolves and shows the username/Block toggle, it doesn't 404.
-  - New messages: `/messages/<thread_id>` POST from a blocked sender should not have been reachable in the first place in the common flow (they'd need to already share a thread), but the read side matters more here — a blocked user's *new* messages shouldn't appear in the blocker's view of the thread going forward; existing history stays. Simplest correct rule matching SiteShape.md: when rendering thread history, hide messages sent by a user the viewer has blocked, dated after the block was created; everything from before the block stays visible.
-  - `/messages` list: a thread with a blocked user still appears in the list (existing history is still theirs to keep, per SiteShape.md), it's not deleted — only new incoming content is hidden.
-- No block list page is described in SiteShape.md, but a small "Blocked users" list under `/notifications` or similar isn't in scope either — keep this to exactly what's specified: the toggle on the profile page is the only place blocking is managed.
+- DB: `users` gets an `is_bot` column (default 0). New `bot_personas` table: user_id (→ users.id), specialty, prompt (short text), created_at.
+- A seed mechanism (extend `seed.sql` or a small Python seed function) creates 1-2 starter bot personas — enough to prove the framework works, not the full roster (that's later features' job to populate more as they need specific bots).
+- `/u/<username>` for a bot-flagged user shows a small "bot" label next to the username (plurality/transparency: "openly bots," never disguised) — otherwise the profile page works unmodified (gift wall + own posts, same as any user).
+- `/messages` already splits People/Bots by `is_bot_thread` on the thread — update thread creation so starting/finding a thread with a bot-flagged user automatically sets `is_bot_thread`, replacing the always-empty stub from Private messaging.
+- No auto-reply logic yet — a message sent to a bot just sits there, same as a person who hasn't answered yet. That is explicitly fine and not a bug: the *conversational* behavior is scoped to the later Welcome bot / Coordinator bots tasks, using templates rather than a live model call.
 
 ## To Do
 
-## Done
+- Add `is_bot` column to `users`, `bot_personas` table to schema.sql.
+- Seed 1-2 starter bot persona rows (user + bot_personas), e.g. a general-purpose "Circulator" bot, in seed.sql or an init helper.
+- Update `find_or_create_thread`/thread creation to set `is_bot_thread` correctly based on whether either participant `is_bot`.
+- Show a "bot" label on `/u/<username>` when that user is bot-flagged.
+- Verify with a scripted test-client run: a seeded bot appears correctly labeled on its profile, starting a thread with a bot lands it in the Bots section of `/messages` (not People), a thread between two humans still lands in People.
 
-- Added `blocks` table to schema.sql (unique blocker_id + blocked_id pair).
-- Added `/u/<username>/block` and `/u/<username>/unblock` POST routes — logged-in only, no-op on yourself.
-- Added the Block/Unblock button to `profile.html`, showing current state.
-- Filtered blocked authors out of the stream query (`index`) and search query for a logged-in viewer.
-- Filtered a blocked-viewed profile's gift wall + posts to empty, without breaking the page for unknown/other viewers.
-- Filtered thread history: messages from a blocked sender created after the block's `created_at` are hidden; everything before stays.
-- Verified with a scripted test-client run: blocking hides the blocked user's stream posts from the blocker only (not from a third party), a blocked user's profile shows empty gift wall/posts to the blocker but normal content to everyone else, a message sent by a blocked user after the block doesn't show to the blocker but pre-block history still does, unblocking restores everything, blocking yourself is a no-op.
+## Done
 
 ## Details
 
-- Deliberately not a platform-wide filter — every query that respects a block must be scoped to "as viewed by the current logged-in user," never a global exclusion.
-- `@mention` filtering explicitly isn't attempted here — SiteShape.md is explicit that other people's posts mentioning a blocked user stay visible; only the blocked user's *own* authored rows get filtered.
+- No live LLM integration in this task — that's a later decision, made when a feature actually needs generated natural language (Welcome bot, Coordinator bots), and can start as a template stand-in even then.
+- Bots don't go through `/signup`/`/login` — they're seeded rows, not accounts anyone logs into.
