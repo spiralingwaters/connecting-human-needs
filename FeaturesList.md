@@ -21,4 +21,4 @@
 - [x] ID export: render the canvas to a high-resolution PNG the user downloads.
 - [x] Signup: claim a unique username, check the image hash is unique, then release the PNG.
 - [x] Avatar derivation: crop the face square down to a small clean avatar and store it.
-- [ ] Login: upload the PNG, hash it, match it, start a session.
+- [x] Login: upload the PNG, hash it, match it, start a session.

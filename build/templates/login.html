@@ -4,5 +4,11 @@
 
 {% block content %}
   {% if error %}<p class="form-error">{{ error }}</p>{% endif %}
+  <p class="placeholder">Upload the ID PNG you downloaded at signup. There's no password — the file itself is your login, and there's no recovery if you lose it.</p>
+  <form class="compose-form" method="post" action="{{ url_for('login') }}" enctype="multipart/form-data">
+    <label for="id_png">Your ID PNG</label>
+    <input type="file" id="id_png" name="id_png" accept="image/png" required>
+    <button type="submit">Log in</button>
+  </form>
   <p class="placeholder">No account yet? <a href="{{ url_for('signup') }}">Sign up</a>.</p>
 {% endblock %}

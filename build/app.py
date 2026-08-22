@@ -589,9 +589,20 @@ def signup():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    return render_template(
-        "login.html", error="Login is being rebuilt for the new PNG identity system — check back shortly."
-    )
+    if request.method == "POST":
+        uploaded = request.files.get("id_png")
+        if uploaded is None or uploaded.filename == "":
+            return render_template("login.html", error="Choose your ID PNG file first.")
+        image_hash = hashlib.sha256(uploaded.read()).hexdigest()
+        db = get_db()
+        user = db.execute(
+            "SELECT id FROM users WHERE image_hash = ?", (image_hash,)
+        ).fetchone()
+        if user is None:
+            return render_template("login.html", error="That image doesn't match any account.")
+        session["user_id"] = user["id"]
+        return redirect(url_for("index"))
+    return render_template("login.html")
 
 
 @app.route("/notes")

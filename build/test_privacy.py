@@ -43,17 +43,16 @@ def fake_id_png(seed_text):
 
 
 def signup_and_login(client, username):
-    """Signs up via the real PNG-based /signup flow, then sets the
-    session directly (session_transaction) rather than through /login —
-    Login is being rebuilt in the very next task and isn't functional
-    yet at this point in the project's history."""
-    client.post("/signup", data={"username": username, "image_data": fake_id_png(username)})
-    db = sqlite3.connect(appmod.DB_PATH)
-    db.row_factory = sqlite3.Row
-    user_id = db.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone()["id"]
-    db.close()
-    with client.session_transaction() as sess:
-        sess["user_id"] = user_id
+    """Signs up via the real PNG-based /signup flow, then logs in for
+    real via /login by re-uploading the same PNG bytes."""
+    png_data_url = fake_id_png(username)
+    client.post("/signup", data={"username": username, "image_data": png_data_url})
+    png_bytes = base64.b64decode(png_data_url.split(",", 1)[1])
+    client.post(
+        "/login",
+        data={"id_png": (io.BytesIO(png_bytes), "my-id.png")},
+        content_type="multipart/form-data",
+    )
 
 
 def bot_thread_id(client):
