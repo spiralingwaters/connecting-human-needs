@@ -245,11 +245,40 @@ def thread(thread_id):
                 (thread_id, user["id"], body),
             )
             if t["is_bot_thread"]:
+                bot_id = thread_other_user(t, user["id"])
+                got_new_need = False
                 for key, value in extract_facts(body):
                     db.execute(
                         "INSERT INTO user_facts (user_id, key, value, source_thread_id) VALUES (?, ?, ?, ?)",
                         (user["id"], key, value, thread_id),
                     )
+                    if key == "needs":
+                        got_new_need = True
+                if got_new_need:
+                    for match in find_overlaps(db, user["id"]):
+                        already = db.execute(
+                            """
+                            SELECT 1 FROM coordinator_notices
+                            WHERE user_id = ? AND matched_username = ? AND offer_value = ?
+                            """,
+                            (user["id"], match["username"], match["offer"]),
+                        ).fetchone()
+                        if already:
+                            continue
+                        db.execute(
+                            "INSERT INTO messages (thread_id, sender_id, body) VALUES (?, ?, ?)",
+                            (
+                                thread_id,
+                                bot_id,
+                                f"Someone here is offering \"{match['offer']}\" — that sounds like "
+                                f"what you're after. Want to reach out? Start a conversation with "
+                                f"@{match['username']}.",
+                            ),
+                        )
+                        db.execute(
+                            "INSERT INTO coordinator_notices (user_id, matched_username, offer_value) VALUES (?, ?, ?)",
+                            (user["id"], match["username"], match["offer"]),
+                        )
             db.commit()
         return redirect(url_for("thread", thread_id=thread_id))
     other_id = thread_other_user(t, user["id"])

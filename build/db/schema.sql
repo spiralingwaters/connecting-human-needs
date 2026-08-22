@@ -100,6 +100,16 @@ CREATE TABLE IF NOT EXISTS user_facts (
     created_at       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
+-- Tracks which overlap matches a coordinator bot has already surfaced to
+-- a user, so the same offer isn't re-announced every time they message.
+CREATE TABLE IF NOT EXISTS coordinator_notices (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id          INTEGER NOT NULL REFERENCES users(id),
+    matched_username TEXT NOT NULL,
+    offer_value      TEXT NOT NULL,
+    created_at       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
 CREATE TABLE IF NOT EXISTS blocks (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     blocker_id INTEGER NOT NULL REFERENCES users(id),
