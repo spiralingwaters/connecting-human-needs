@@ -1,0 +1,413 @@
+<title>Circulation Schema</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f6f4ef; --surface:#ffffff; --ink:#22231f; --ink-soft:#5b5c54;
+  --line:#e1ddd0; --accent:#2f6f5e; --accent-soft:#e4efe9; --mono-tint:#f1efe6;
+
+  --g-identity:#3a6b52; --g-identity-soft:#e4efe9;
+  --g-stream:#a4742f;   --g-stream-soft:#f3e9d8;
+  --g-gift:#a4382f;     --g-gift-soft:#f5e2df;
+  --g-messaging:#2f5fa4;--g-messaging-soft:#e2eaf5;
+  --g-botintel:#7a3fa0; --g-botintel-soft:#ece2f3;
+  --g-safety:#6b3a63;   --g-safety-soft:#ede1eb;
+  --g-meta:#7d7767;     --g-meta-soft:#eae7de;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#171815; --surface:#1f2019; --ink:#ece9de; --ink-soft:#a6a397;
+    --line:#34352c; --accent:#7fc4ab; --accent-soft:#213228; --mono-tint:#232419;
+
+    --g-identity:#7fc4ab; --g-identity-soft:#1e2f26;
+    --g-stream:#e0b167;   --g-stream-soft:#332a19;
+    --g-gift:#e2836f;     --g-gift-soft:#352220;
+    --g-messaging:#8fb4e8;--g-messaging-soft:#1e2a3a;
+    --g-botintel:#c599e8; --g-botintel-soft:#2c223a;
+    --g-safety:#c98fc0;   --g-safety-soft:#332230;
+    --g-meta:#a6a08d;     --g-meta-soft:#2b2a21;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#171815; --surface:#1f2019; --ink:#ece9de; --ink-soft:#a6a397;
+  --line:#34352c; --accent:#7fc4ab; --accent-soft:#213228; --mono-tint:#232419;
+
+  --g-identity:#7fc4ab; --g-identity-soft:#1e2f26;
+  --g-stream:#e0b167;   --g-stream-soft:#332a19;
+  --g-gift:#e2836f;     --g-gift-soft:#352220;
+  --g-messaging:#8fb4e8;--g-messaging-soft:#1e2a3a;
+  --g-botintel:#c599e8; --g-botintel-soft:#2c223a;
+  --g-safety:#c98fc0;   --g-safety-soft:#332230;
+  --g-meta:#a6a08d;     --g-meta-soft:#2b2a21;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--ground);
+  color:var(--ink);
+  font-family:'Source Serif 4', Georgia, 'Times New Roman', serif;
+  min-height:100vh;
+}
+
+.wrap{max-width:1120px; margin:0 auto; padding:0 clamp(1.25rem,4vw,3rem) 5rem;}
+
+header{padding:3rem 0 1.75rem; border-bottom:1px solid var(--line);}
+.eyebrow{
+  font-family:'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase;
+  color:var(--accent);
+}
+h1{
+  font-family:'Fraunces','Source Serif 4',serif;
+  font-weight:600; font-size:clamp(2rem,4.5vw,3rem);
+  margin:0.4rem 0 0.9rem; text-wrap:balance;
+}
+header p{margin:0; color:var(--ink-soft); font-size:1.05rem; max-width:62ch; line-height:1.6;}
+
+.stats{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:1px; background:var(--line); border:1px solid var(--line); border-radius:10px;
+  overflow:hidden; margin-top:1.75rem;
+}
+.stat{background:var(--surface); padding:1rem 1.1rem;}
+.stat b{
+  display:block; font-family:'Fraunces',serif; font-weight:600;
+  font-size:1.6rem; font-variant-numeric:tabular-nums;
+}
+.stat span{font-size:0.8rem; color:var(--ink-soft);}
+
+section{padding:2.75rem 0; border-bottom:1px solid var(--line);}
+section:last-child{border-bottom:none;}
+h2{
+  font-family:'Fraunces',serif; font-weight:600; font-size:1.5rem;
+  margin:0 0 0.5rem;
+}
+.section-lede{color:var(--ink-soft); font-size:0.98rem; max-width:64ch; margin:0 0 1.75rem; line-height:1.6;}
+
+figure{margin:0;}
+.diagram-scroll{overflow-x:auto; border:1px solid var(--line); border-radius:12px; background:var(--surface);}
+.diagram-scroll svg{display:block; min-width:920px;}
+figcaption{color:var(--ink-soft); font-size:0.85rem; margin-top:0.75rem; max-width:64ch;}
+
+.legend{
+  display:flex; flex-wrap:wrap; gap:0.5rem 1.4rem; margin-top:1.25rem;
+  font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:0.78rem; color:var(--ink-soft);
+}
+.legend-item{display:flex; align-items:center; gap:0.5rem;}
+.swatch{width:0.7rem; height:0.7rem; border-radius:3px; flex:none;}
+
+.groups{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1.1rem;}
+.group-card{
+  background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  padding:1.15rem 1.25rem 1.3rem; border-top:3px solid var(--g);
+}
+.group-card h3{
+  font-family:'IBM Plex Mono',monospace; font-size:0.95rem; font-weight:600;
+  margin:0 0 0.15rem; color:var(--g);
+}
+.group-card .tables{
+  font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--ink-soft);
+  text-transform:uppercase; letter-spacing:0.04em; margin:0 0 0.75rem;
+}
+.group-card p{margin:0 0 0.6rem; font-size:0.92rem; line-height:1.55;}
+.group-card p:last-child{margin-bottom:0;}
+
+.future{
+  display:grid; gap:0.9rem;
+}
+.future-item{
+  display:grid; grid-template-columns:auto 1fr; gap:0.9rem; align-items:start;
+  background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:0.9rem 1.1rem;
+}
+.future-item .field{
+  font-family:'IBM Plex Mono',monospace; font-size:0.76rem; color:var(--accent);
+  background:var(--accent-soft); border-radius:6px; padding:0.3rem 0.55rem; white-space:nowrap;
+}
+.future-item p{margin:0; font-size:0.92rem; line-height:1.55;}
+
+footer{padding:2rem 0 0; color:var(--ink-soft); font-size:0.82rem; font-family:'IBM Plex Mono',monospace;}
+
+.svg-label{font-family:'IBM Plex Mono', ui-monospace, monospace;}
+.svg-header{font-weight:600; font-size:14px;}
+.svg-purpose{font-family:'Source Serif 4',serif; font-style:italic; font-size:11px;}
+.svg-field{font-size:11.5px;}
+.zone-label{font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;}
+
+::-webkit-scrollbar{height:10px; width:10px;}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:6px;}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">connecting-human-needs &middot; build/db/schema.sql</div>
+    <h1>Circulation Schema</h1>
+    <p>Ten SQLite tables, one identity table doing the anchoring. This is a map of what's actually built — grouped by what each cluster is for, colored so the groups stay legible wherever they show up again below, with an eye toward what each design choice deliberately leaves room for later.</p>
+    <div class="stats">
+      <div class="stat"><b>10</b><span>tables</span></div>
+      <div class="stat"><b>1</b><span>identity table for humans &amp; bots</span></div>
+      <div class="stat"><b>14</b><span>foreign keys, 11 drawn below</span></div>
+      <div class="stat"><b>0</b><span>tables for money or scores</span></div>
+    </div>
+  </header>
+
+  <section id="diagram">
+    <h2>The whole schema, at a glance</h2>
+    <p class="section-lede">Every arrow below is a foreign key. Almost everything points back to <code>users</code> — that fan-in is the actual shape of this database: one identity table underneath a public stream, a gift economy, private messaging, a bot's memory, and a personal-filter table for blocking.</p>
+
+    <figure>
+      <div class="diagram-scroll">
+        <svg viewBox="0 0 1740 900" role="img" aria-label="Entity diagram of the ten database tables, grouped into seven colored zones, with arrows showing that nearly every table's foreign key points back to the central users table.">
+          <defs>
+            <marker id="a-identity" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--g-identity)"/></marker>
+            <marker id="a-stream" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--g-stream)"/></marker>
+            <marker id="a-gift" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--g-gift)"/></marker>
+            <marker id="a-messaging" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--g-messaging)"/></marker>
+            <marker id="a-botintel" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--g-botintel)"/></marker>
+            <marker id="a-safety" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--g-safety)"/></marker>
+          </defs>
+
+          <!-- zone backgrounds -->
+          <rect x="60" y="70" width="380" height="368" rx="14" fill="var(--g-identity-soft)" stroke="var(--g-identity)" stroke-opacity="0.35"/>
+          <rect x="480" y="70" width="380" height="194" rx="14" fill="var(--g-stream-soft)" stroke="var(--g-stream)" stroke-opacity="0.35"/>
+          <rect x="480" y="284" width="380" height="216" rx="14" fill="var(--g-gift-soft)" stroke="var(--g-gift)" stroke-opacity="0.35"/>
+          <rect x="900" y="70" width="380" height="498" rx="14" fill="var(--g-messaging-soft)" stroke="var(--g-messaging)" stroke-opacity="0.35"/>
+          <rect x="1320" y="70" width="380" height="368" rx="14" fill="var(--g-botintel-soft)" stroke="var(--g-botintel)" stroke-opacity="0.35"/>
+          <rect x="1320" y="458" width="380" height="194" rx="14" fill="var(--g-safety-soft)" stroke="var(--g-safety)" stroke-opacity="0.35"/>
+          <rect x="1320" y="672" width="380" height="172" rx="14" fill="var(--g-meta-soft)" stroke="var(--g-meta)" stroke-opacity="0.35"/>
+
+          <!-- zone labels -->
+          <text class="zone-label" x="80" y="92" fill="var(--g-identity)">Identity &amp; Bots</text>
+          <text class="zone-label" x="500" y="92" fill="var(--g-stream)">Public Stream</text>
+          <text class="zone-label" x="500" y="306" fill="var(--g-gift)">Gift Economy</text>
+          <text class="zone-label" x="920" y="92" fill="var(--g-messaging)">Messaging &amp; Notifications</text>
+          <text class="zone-label" x="1340" y="92" fill="var(--g-botintel)">Bot Intelligence</text>
+          <text class="zone-label" x="1340" y="480" fill="var(--g-safety)">Social Safety</text>
+          <text class="zone-label" x="1340" y="694" fill="var(--g-meta)">Site Meta</text>
+
+          <!-- arrows (drawn first, under the cards) -->
+          <g fill="none" stroke-width="1.8">
+            <line x1="500" y1="182" x2="420" y2="130" stroke="var(--g-stream)" marker-end="url(#a-stream)"/>
+            <line x1="500" y1="407" x2="420" y2="148" stroke="var(--g-gift)" marker-end="url(#a-gift)"/>
+            <line x1="920" y1="182" x2="420" y2="166" stroke="var(--g-messaging)" marker-end="url(#a-messaging)"/>
+            <line x1="920" y1="334" x2="420" y2="184" stroke="var(--g-messaging)" marker-end="url(#a-messaging)"/>
+            <line x1="920" y1="486" x2="420" y2="202" stroke="var(--g-messaging)" marker-end="url(#a-messaging)"/>
+            <line x1="1340" y1="193" x2="420" y2="220" stroke="var(--g-botintel)" marker-end="url(#a-botintel)"/>
+            <line x1="1340" y1="356" x2="420" y2="238" stroke="var(--g-botintel)" marker-end="url(#a-botintel)"/>
+            <line x1="1340" y1="570" x2="420" y2="256" stroke="var(--g-safety)" marker-end="url(#a-safety)"/>
+            <line x1="250" y1="290" x2="250" y2="272" stroke="var(--g-identity)" marker-end="url(#a-identity)"/>
+            <line x1="1090" y1="268" x2="1090" y2="250" stroke="var(--g-messaging)" marker-end="url(#a-messaging)"/>
+            <line x1="1340" y1="193" x2="1260" y2="182" stroke="var(--g-botintel)" stroke-dasharray="4 4" marker-end="url(#a-botintel)"/>
+          </g>
+
+          <!-- users -->
+          <g>
+            <rect x="80" y="116" width="340" height="154" rx="10" fill="var(--surface)" stroke="var(--g-identity)" stroke-width="1.6"/>
+            <text class="svg-label svg-header" x="98" y="142" fill="var(--ink)">users</text>
+            <text class="svg-label svg-purpose" x="98" y="160" fill="var(--ink-soft)">one identity for humans + bots</text>
+            <text class="svg-label svg-field" x="98" y="188" fill="var(--ink)">username &#8212; unique</text>
+            <text class="svg-label svg-field" x="98" y="209" fill="var(--ink)">image_hash &#8212; unique, hash of the PNG</text>
+            <text class="svg-label svg-field" x="98" y="230" fill="var(--ink)">is_bot &#8212; a flag, not a separate table</text>
+            <text class="svg-label svg-field" x="98" y="253" fill="var(--ink-soft)">every other table hangs off this id &#8594;</text>
+          </g>
+
+          <!-- bot_personas -->
+          <g>
+            <rect x="80" y="290" width="340" height="132" rx="10" fill="var(--surface)" stroke="var(--g-identity)" stroke-width="1.2"/>
+            <text class="svg-label svg-header" x="98" y="316" fill="var(--ink)">bot_personas</text>
+            <text class="svg-label svg-purpose" x="98" y="334" fill="var(--ink-soft)">a persona's memory, not a prompt</text>
+            <text class="svg-label svg-field" x="98" y="362" fill="var(--ink)">user_id &#8594; users</text>
+            <text class="svg-label svg-field" x="98" y="383" fill="var(--ink)">specialty, prompt &#8212; stored, unused</text>
+          </g>
+
+          <!-- posts -->
+          <g>
+            <rect x="500" y="116" width="340" height="132" rx="10" fill="var(--surface)" stroke="var(--g-stream)" stroke-width="1.6"/>
+            <text class="svg-label svg-header" x="518" y="142" fill="var(--ink)">posts</text>
+            <text class="svg-label svg-purpose" x="518" y="160" fill="var(--ink-soft)">the one flat public stream</text>
+            <text class="svg-label svg-field" x="518" y="188" fill="var(--ink)">author_id &#8594; users</text>
+            <text class="svg-label svg-field" x="518" y="209" fill="var(--ink)">kind &#8212; 'post' or 'redemption'</text>
+          </g>
+
+          <!-- gift_notes -->
+          <g>
+            <rect x="500" y="330" width="340" height="154" rx="10" fill="var(--surface)" stroke="var(--g-gift)" stroke-width="1.6"/>
+            <text class="svg-label svg-header" x="518" y="356" fill="var(--ink)">gift_notes</text>
+            <text class="svg-label svg-purpose" x="518" y="374" fill="var(--ink-soft)">the gift economy's one object</text>
+            <text class="svg-label svg-field" x="518" y="402" fill="var(--ink)">original_author_id &#8594; users</text>
+            <text class="svg-label svg-field" x="518" y="423" fill="var(--ink)">current_holder_id &#8594; users</text>
+            <text class="svg-label svg-field" x="518" y="444" fill="var(--ink)">redeemed_at &#8212; set once, final</text>
+          </g>
+
+          <!-- message_threads -->
+          <g>
+            <rect x="920" y="116" width="340" height="132" rx="10" fill="var(--surface)" stroke="var(--g-messaging)" stroke-width="1.6"/>
+            <text class="svg-label svg-header" x="938" y="142" fill="var(--ink)">message_threads</text>
+            <text class="svg-label svg-purpose" x="938" y="160" fill="var(--ink-soft)">one row per conversation pair</text>
+            <text class="svg-label svg-field" x="938" y="188" fill="var(--ink)">user_a_id / user_b_id &#8594; users</text>
+            <text class="svg-label svg-field" x="938" y="209" fill="var(--ink)">is_bot_thread &#8212; reserved, unset</text>
+          </g>
+
+          <!-- messages -->
+          <g>
+            <rect x="920" y="268" width="340" height="132" rx="10" fill="var(--surface)" stroke="var(--g-messaging)" stroke-width="1.2"/>
+            <text class="svg-label svg-header" x="938" y="294" fill="var(--ink)">messages</text>
+            <text class="svg-label svg-purpose" x="938" y="312" fill="var(--ink-soft)">one message inside a thread</text>
+            <text class="svg-label svg-field" x="938" y="340" fill="var(--ink)">thread_id &#8594; message_threads</text>
+            <text class="svg-label svg-field" x="938" y="361" fill="var(--ink)">sender_id &#8594; users</text>
+          </g>
+
+          <!-- notifications -->
+          <g>
+            <rect x="920" y="420" width="340" height="132" rx="10" fill="var(--surface)" stroke="var(--g-messaging)" stroke-width="1.2"/>
+            <text class="svg-label svg-header" x="938" y="446" fill="var(--ink)">notifications</text>
+            <text class="svg-label svg-purpose" x="938" y="464" fill="var(--ink-soft)">one-way system notices only</text>
+            <text class="svg-label svg-field" x="938" y="492" fill="var(--ink)">user_id &#8594; users</text>
+            <text class="svg-label svg-field" x="938" y="513" fill="var(--ink)">message, is_read</text>
+          </g>
+
+          <!-- user_facts -->
+          <g>
+            <rect x="1340" y="116" width="340" height="154" rx="10" fill="var(--surface)" stroke="var(--g-botintel)" stroke-width="1.6"/>
+            <text class="svg-label svg-header" x="1358" y="142" fill="var(--ink)">user_facts</text>
+            <text class="svg-label svg-purpose" x="1358" y="160" fill="var(--ink-soft)">a bot's memory, human&#8594;bot only</text>
+            <text class="svg-label svg-field" x="1358" y="188" fill="var(--ink)">user_id &#8594; users</text>
+            <text class="svg-label svg-field" x="1358" y="209" fill="var(--ink)">key / value</text>
+            <text class="svg-label svg-field" x="1358" y="230" fill="var(--ink)">source_thread_id &#8594; message_threads</text>
+          </g>
+
+          <!-- coordinator_notices -->
+          <g>
+            <rect x="1340" y="290" width="340" height="132" rx="10" fill="var(--surface)" stroke="var(--g-botintel)" stroke-width="1.2"/>
+            <text class="svg-label svg-header" x="1358" y="316" fill="var(--ink)">coordinator_notices</text>
+            <text class="svg-label svg-purpose" x="1358" y="334" fill="var(--ink-soft)">don't repeat the same match twice</text>
+            <text class="svg-label svg-field" x="1358" y="362" fill="var(--ink)">user_id &#8594; users</text>
+            <text class="svg-label svg-field" x="1358" y="383" fill="var(--ink)">matched_username, offer_value</text>
+          </g>
+
+          <!-- blocks -->
+          <g>
+            <rect x="1340" y="504" width="340" height="132" rx="10" fill="var(--surface)" stroke="var(--g-safety)" stroke-width="1.6"/>
+            <text class="svg-label svg-header" x="1358" y="530" fill="var(--ink)">blocks</text>
+            <text class="svg-label svg-purpose" x="1358" y="548" fill="var(--ink-soft)">a silent, personal filter only</text>
+            <text class="svg-label svg-field" x="1358" y="576" fill="var(--ink)">blocker_id / blocked_id &#8594; users</text>
+            <text class="svg-label svg-field" x="1358" y="597" fill="var(--ink)">UNIQUE per pair &#8212; can't double-block</text>
+          </g>
+
+          <!-- site_meta -->
+          <g>
+            <rect x="1340" y="718" width="340" height="110" rx="10" fill="var(--surface)" stroke="var(--g-meta)" stroke-width="1.6"/>
+            <text class="svg-label svg-header" x="1358" y="744" fill="var(--ink)">site_meta</text>
+            <text class="svg-label svg-purpose" x="1358" y="762" fill="var(--ink-soft)">generic key&#8211;value, no relations</text>
+            <text class="svg-label svg-field" x="1358" y="790" fill="var(--ink)">key &#8212; primary key, value</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption>Solid arrows are foreign keys, colored by the table they leave from. Dashed = a secondary reference on the same row. Nearly every arrow ends at <code>users</code> — the one exception is the pair of short arrows into <code>message_threads</code>, from <code>messages</code> and <code>user_facts</code>.</figcaption>
+    </figure>
+
+    <div class="legend">
+      <div class="legend-item"><span class="swatch" style="background:var(--g-identity)"></span>Identity &amp; Bots</div>
+      <div class="legend-item"><span class="swatch" style="background:var(--g-stream)"></span>Public Stream</div>
+      <div class="legend-item"><span class="swatch" style="background:var(--g-gift)"></span>Gift Economy</div>
+      <div class="legend-item"><span class="swatch" style="background:var(--g-messaging)"></span>Messaging &amp; Notifications</div>
+      <div class="legend-item"><span class="swatch" style="background:var(--g-botintel)"></span>Bot Intelligence</div>
+      <div class="legend-item"><span class="swatch" style="background:var(--g-safety)"></span>Social Safety</div>
+      <div class="legend-item"><span class="swatch" style="background:var(--g-meta)"></span>Site Meta</div>
+    </div>
+  </section>
+
+  <section id="groups">
+    <h2>What each group does, and why it's shaped that way</h2>
+    <p class="section-lede">The grouping isn't cosmetic — it mirrors the seven ideas <code>Mission.md</code> and <code>SiteShape.md</code> actually separate from each other.</p>
+
+    <div class="groups">
+      <div class="group-card" style="--g:var(--g-identity)">
+        <h3>Identity &amp; Bots</h3>
+        <p class="tables">users &middot; bot_personas</p>
+        <p>One <code>users</code> table for humans and bot personas alike — <code>is_bot</code> is just a flag, not a parallel schema, because Mission.md treats bots as residents of the same space, not a different kind of thing.</p>
+        <p>The server never stores your drawn ID, only <code>image_hash</code> (a SHA-256 of it). That's the whole login: no password column exists to leak, and there's no recovery table either — losing the PNG is permanent, by design.</p>
+      </div>
+
+      <div class="group-card" style="--g:var(--g-stream)">
+        <h3>Public Stream</h3>
+        <p class="tables">posts</p>
+        <p>Every visible thing on the site — a message, a bot's welcome note, a redeemed-gift announcement — is one row here, distinguished only by <code>kind</code>. There's no separate "announcements" or "system messages" table, because SiteShape.md treats them all as peers in one flat, chronological feed.</p>
+      </div>
+
+      <div class="group-card" style="--g:var(--g-gift)">
+        <h3>Gift Economy</h3>
+        <p class="tables">gift_notes</p>
+        <p>A note doesn't move between rows as it's passed hand to hand — <code>current_holder_id</code> just gets overwritten, while <code>original_author_id</code> never changes. That's how a note can pass through five people and still visibly trace back to whoever first gave it.</p>
+        <p><code>redeemed_at</code> is the only field that turns a private note into a public one (a <code>posts</code> row with <code>kind='redemption'</code>) — and it's write-once. Redeemed is a one-way door.</p>
+      </div>
+
+      <div class="group-card" style="--g:var(--g-messaging)">
+        <h3>Messaging &amp; Notifications</h3>
+        <p class="tables">message_threads &middot; messages &middot; notifications</p>
+        <p>Person-to-person and person-to-bot conversations both live in <code>message_threads</code>/<code>messages</code> — the only difference is the <code>is_bot_thread</code> flag, which is what lets bots read bot conversations and never human-to-human ones, per Mission.md's hard privacy rule.</p>
+        <p><code>notifications</code> is kept deliberately separate from messages — a "your note was redeemed" ping is a system notice, never a conversation, so it never risks looking like one.</p>
+      </div>
+
+      <div class="group-card" style="--g:var(--g-botintel)">
+        <h3>Bot Intelligence</h3>
+        <p class="tables">user_facts &middot; coordinator_notices</p>
+        <p><code>user_facts</code> is a bot's memory in the literal sense Mission.md means it: "the database is the memory, not the context window." A fact is only ever extracted from a human&#8594;bot thread (<code>source_thread_id</code>), never a human-to-human one.</p>
+        <p><code>coordinator_notices</code> exists purely so a bot doesn't announce the same overlap match to the same person twice — a small dedupe log, not a scoring system.</p>
+      </div>
+
+      <div class="group-card" style="--g:var(--g-safety)">
+        <h3>Social Safety</h3>
+        <p class="tables">blocks</p>
+        <p>One row, one direction: <code>blocker_id</code> stops seeing <code>blocked_id</code>. There's no ratio, no score, no visibility to the blocked person — every query that respects a block has to scope itself to "as viewed by the current user," never a global exclusion, exactly as Mission.md insists blocking stay personal, not a platform punishment.</p>
+      </div>
+
+      <div class="group-card" style="--g:var(--g-meta)">
+        <h3>Site Meta</h3>
+        <p class="tables">site_meta</p>
+        <p>A plain key&#8211;value table with no foreign keys at all — the one deliberately un-networked table, left over from the original project skeleton for whatever small global settings show up later.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="future">
+    <h2>What's preserved for later</h2>
+    <p class="section-lede">A handful of columns and choices exist that nothing reads yet — each one is a seam left open on purpose, so a future feature slots in without a schema rewrite.</p>
+
+    <div class="future">
+      <div class="future-item">
+        <span class="field">bot_personas.prompt</span>
+        <p>Stored at signup time but nothing ever sends it to a real LLM yet. When a persona gets an actual generated voice, the column's already there.</p>
+      </div>
+      <div class="future-item">
+        <span class="field">message_threads.is_bot_thread</span>
+        <p>Set to 0 on every row so far — nothing routes a thread as bot-vs-human yet. It's the flag SiteShape.md's "visibly different surfaces" rule will hang off once bot conversations actually start.</p>
+      </div>
+      <div class="future-item">
+        <span class="field">posts.author_name</span>
+        <p>Kept alongside the newer <code>author_id</code> rather than dropped — it's what pre-account posts from the placeholder-identity era still carry, so old rows don't need a backfill to stay readable.</p>
+      </div>
+      <div class="future-item">
+        <span class="field">users.is_bot</span>
+        <p>A flag instead of a second table — the deliberate choice that keeps humans and bots sharing one identity system, the way Mission.md's "humans and bots share this space" actually wants it modeled.</p>
+      </div>
+      <div class="future-item">
+        <span class="field">avatar files, not a table</span>
+        <p>Derived avatars live as plain PNG files on disk, named by user id — not a database row. Nothing stops a future <code>avatars</code> table from replacing that if avatars ever need more than one file per person.</p>
+      </div>
+      <div class="future-item">
+        <span class="field">user_facts.key / value</span>
+        <p>Generic on purpose: a new fact type (a channel used, a new kind of need) is just a new key, never a new column or migration.</p>
+      </div>
+      <div class="future-item">
+        <span class="field">no location columns yet</span>
+        <p>SiteShape.md's proximity shading needs a rough lat/lon somewhere on <code>users</code> — not built yet, and deliberately absent rather than guessed at early.</p>
+      </div>
+      <div class="future-item">
+        <span class="field">no moderation table</span>
+        <p>There's no role, permission, or report table anywhere in this schema. SiteShape.md flags real moderation as a genuinely open question — the schema reflects that honestly instead of pre-building an admin system nobody's decided on.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>Generated from build/db/schema.sql &middot; branch claude/review-so-far-d0b8rx</footer>
+</div>
