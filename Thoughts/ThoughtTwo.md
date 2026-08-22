@@ -1,0 +1,1 @@
+A clockmaker discovers that one gear in an old town clock has been quietly running backward for decades, and instead of fixing it she builds the rest of the mechanism around its rebellion, so that once a year, for exactly one minute, the whole square hears time tick the wrong way and everyone standing there remembers something they had forgotten to forgive.

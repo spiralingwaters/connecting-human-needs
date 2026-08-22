@@ -1,0 +1,1 @@
+A cartographer mapping a river notices the water keeps redrawing its own banks faster than her ink can dry, so she stops trying to pin down where it is and starts mapping where it wants to go instead, and the resulting chart, useless for sailing, becomes the only map anyone in the valley trusts to find water during a drought.

@@ -1,0 +1,1 @@
+A lighthouse keeper on a coast with no ships left to guide spends her nights repainting the beam anyway, brighter each time, until one evening a flock of migrating birds reroutes its entire path around her light, having mistaken it for a star, and she realizes the work was never about the ships at all.
