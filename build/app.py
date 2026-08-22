@@ -1,5 +1,6 @@
 import hashlib
 import os
+import re
 import secrets
 import sqlite3
 
@@ -157,6 +158,23 @@ def find_or_create_thread(db, user_a_id, user_b_id):
     return cur.lastrowid
 
 
+FACT_PATTERNS = [
+    ("offers", re.compile(r"\bi(?:'m| am)? (?:have|offer(?:ing)?)\s+(?:a |an |some )?([^.,!\n]+)", re.I)),
+    ("needs", re.compile(r"\b(?:i need|looking for)\s+(?:a |an |some )?([^.,!\n]+)", re.I)),
+    ("city", re.compile(r"\bi'?m in ([^.,!\n]+)", re.I)),
+    ("channel", re.compile(r"([\w.+-]+@[\w-]+\.[\w.-]+)")),
+]
+
+
+def extract_facts(body):
+    facts = []
+    for key, pattern in FACT_PATTERNS:
+        m = pattern.search(body)
+        if m:
+            facts.append((key, m.group(1).strip()))
+    return facts
+
+
 def thread_other_user(thread, my_id):
     return thread["user_b_id"] if thread["user_a_id"] == my_id else thread["user_a_id"]
 
@@ -226,6 +244,12 @@ def thread(thread_id):
                 "INSERT INTO messages (thread_id, sender_id, body) VALUES (?, ?, ?)",
                 (thread_id, user["id"], body),
             )
+            if t["is_bot_thread"]:
+                for key, value in extract_facts(body):
+                    db.execute(
+                        "INSERT INTO user_facts (user_id, key, value, source_thread_id) VALUES (?, ?, ?, ?)",
+                        (user["id"], key, value, thread_id),
+                    )
             db.commit()
         return redirect(url_for("thread", thread_id=thread_id))
     other_id = thread_other_user(t, user["id"])

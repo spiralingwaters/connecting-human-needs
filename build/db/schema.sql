@@ -88,6 +88,18 @@ CREATE TABLE IF NOT EXISTS messages (
 -- A silent, per-viewer filter only — never a platform-wide score or
 -- punishment (Mission.md). Every query respecting a block must scope to
 -- "as viewed by the current logged-in user," never a global exclusion.
+-- Structured facts pulled from human->bot messages only (never
+-- human-to-human, per Mission.md's hard privacy rule). Extracted by a
+-- heuristic keyword/regex matcher for now, not a real language model.
+CREATE TABLE IF NOT EXISTS user_facts (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id          INTEGER NOT NULL REFERENCES users(id),
+    key              TEXT NOT NULL,
+    value            TEXT NOT NULL,
+    source_thread_id INTEGER NOT NULL REFERENCES message_threads(id),
+    created_at       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
 CREATE TABLE IF NOT EXISTS blocks (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     blocker_id INTEGER NOT NULL REFERENCES users(id),
