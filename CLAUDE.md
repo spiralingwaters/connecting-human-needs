@@ -1,4 +1,8 @@
 
+# GITHUB APP ACCESS
+
+If any GitHub write action (creating a branch, pushing, opening a PR, changing repo settings) fails with a 403 "Resource not accessible by integration" error, this means the Claude GitHub App installation doesn't have full access/permissions to this repo. Tell the user to go to **https://github.com/settings/installations**, find the Claude/Claude Code app entry, click "Configure", and make sure this repo is listed with write access enabled (they may need to approve a permissions-upgrade request there). Give them this link plainly before attempting workarounds.
+
 # CONVERSATION STYLE
 
 Respond to each prompt as concisely as you can with a short list of very concise numbered bullet points explaining the most important parts of the response, and offering to go into more detail on any of the numbered points, so the user can just press one or more numbers to hear more about those parts of the response.
