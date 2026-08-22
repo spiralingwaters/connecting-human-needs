@@ -1,7 +1,7 @@
 import os
 import sqlite3
 
-from flask import Flask, g, render_template
+from flask import Flask, g, redirect, render_template, request, url_for
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "db", "site.db")
@@ -42,7 +42,26 @@ def index():
         "SELECT value FROM site_meta WHERE key = 'tagline'"
     ).fetchone()
     tagline = row["value"] if row else ""
-    return render_template("index.html", tagline=tagline)
+    posts = db.execute(
+        "SELECT author_name, body, created_at FROM posts ORDER BY id DESC"
+    ).fetchall()
+    return render_template("index.html", tagline=tagline, posts=posts)
+
+
+@app.route("/new", methods=["GET", "POST"])
+def new_post():
+    if request.method == "POST":
+        author_name = request.form.get("author_name", "").strip()
+        body = request.form.get("body", "").strip()
+        if author_name and body:
+            db = get_db()
+            db.execute(
+                "INSERT INTO posts (author_name, body) VALUES (?, ?)",
+                (author_name, body),
+            )
+            db.commit()
+        return redirect(url_for("index"))
+    return render_template("new_post.html")
 
 
 if __name__ == "__main__":

@@ -4,5 +4,15 @@
 
 {% block content %}
   <p class="tagline">{{ tagline }}</p>
-  <p class="placeholder">The global stream will render here.</p>
+  <a class="compose-link" href="{{ url_for('new_post') }}">New post</a>
+  <div class="stream">
+    {% for post in posts %}
+      <article class="post">
+        <div class="post-meta">{{ post.author_name }} &middot; {{ post.created_at }}</div>
+        <div class="post-body">{{ post.body }}</div>
+      </article>
+    {% else %}
+      <p class="placeholder">No posts yet.</p>
+    {% endfor %}
+  </div>
 {% endblock %}

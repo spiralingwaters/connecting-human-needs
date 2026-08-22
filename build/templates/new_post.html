@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}New post — Connecting Human Needs{% endblock %}
+
+{% block content %}
+  <form class="compose-form" method="post" action="{{ url_for('new_post') }}">
+    <label for="author_name">Poster name (temporary — no accounts yet)</label>
+    <input type="text" id="author_name" name="author_name" required maxlength="80">
+    <label for="body">Message</label>
+    <textarea id="body" name="body" required maxlength="2000" rows="5"></textarea>
+    <button type="submit">Post</button>
+  </form>
+{% endblock %}

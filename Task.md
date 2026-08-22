@@ -15,13 +15,13 @@ Build the flat, chronological stream from SiteShape.md: one column, newest-to-ol
 
 ## To Do
 
-- Add `posts` table to schema.sql + a couple of seed posts.
-- Update `/` route + template to list posts newest-first.
-- Add `/new` route (GET form, POST insert) + template.
-- Basic styling consistent with the existing base stylesheet.
-- Manually verify: post via `/new`, see it appear newest-first on `/`.
-
 ## Done
+
+- Added `posts` table to schema.sql + a seed post.
+- Updated `/` route + template to list posts newest-first.
+- Added `/new` route (GET form, POST insert) + template.
+- Added styling for the stream, compose link, and compose form.
+- Verified with a scripted test-client run: seed post renders, `/new` form loads, posting inserts and redirects, new post appears before the seed post (newest-first), empty submissions are rejected without creating a post.
 
 ## Details
 

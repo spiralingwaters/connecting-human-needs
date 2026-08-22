@@ -42,3 +42,73 @@ main {
 .placeholder {
   color: var(--muted);
 }
+
+.compose-link {
+  display: inline-block;
+  margin: 0.5rem 0 1.5rem;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.compose-link:hover {
+  text-decoration: underline;
+}
+
+.stream {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.post {
+  background: #ffffff;
+  border: 1px solid #e4e2da;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+}
+
+.post-meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.post-body {
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.compose-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 480px;
+}
+
+.compose-form label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+}
+
+.compose-form input,
+.compose-form textarea {
+  font: inherit;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #e4e2da;
+  border-radius: 6px;
+}
+
+.compose-form button {
+  align-self: flex-start;
+  margin-top: 0.75rem;
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
