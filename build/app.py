@@ -283,6 +283,64 @@ def thread(thread_id):
     )
 
 
+STOPWORDS = {
+    "a", "an", "the", "to", "for", "and", "of", "in", "i", "need", "needs",
+    "looking", "have", "offer", "offering", "away", "give", "giving",
+}
+
+
+def significant_words(text):
+    return {w for w in re.findall(r"[a-z0-9]+", text.lower()) if w not in STOPWORDS}
+
+
+def find_overlaps(db, user_id):
+    needs = db.execute(
+        "SELECT value FROM user_facts WHERE user_id = ? AND key = 'needs'", (user_id,)
+    ).fetchall()
+    if not needs:
+        return []
+    blocked_either_way = {
+        row["blocked_id"]
+        for row in db.execute(
+            "SELECT blocked_id FROM blocks WHERE blocker_id = ?", (user_id,)
+        ).fetchall()
+    } | {
+        row["blocker_id"]
+        for row in db.execute(
+            "SELECT blocker_id FROM blocks WHERE blocked_id = ?", (user_id,)
+        ).fetchall()
+    }
+    offers = db.execute(
+        """
+        SELECT user_facts.user_id, user_facts.value, users.username
+        FROM user_facts JOIN users ON users.id = user_facts.user_id
+        WHERE user_facts.key = 'offers' AND user_facts.user_id != ?
+        """,
+        (user_id,),
+    ).fetchall()
+    matches = []
+    for need in needs:
+        need_words = significant_words(need["value"])
+        if not need_words:
+            continue
+        for offer in offers:
+            if offer["user_id"] in blocked_either_way:
+                continue
+            offer_words = significant_words(offer["value"])
+            shared = need_words & offer_words
+            if shared:
+                matches.append(
+                    {
+                        "username": offer["username"],
+                        "need": need["value"],
+                        "offer": offer["value"],
+                        "score": len(shared),
+                    }
+                )
+    matches.sort(key=lambda m: m["score"], reverse=True)
+    return matches
+
+
 def is_blocked_by_viewer(db, viewer_id, other_id):
     if viewer_id is None:
         return False
@@ -291,6 +349,16 @@ def is_blocked_by_viewer(db, viewer_id, other_id):
         (viewer_id, other_id),
     ).fetchone()
     return row is not None
+
+
+@app.route("/overlaps")
+def overlaps():
+    user = current_user()
+    if user is None:
+        return redirect(url_for("login"))
+    db = get_db()
+    matches = find_overlaps(db, user["id"])
+    return render_template("overlaps.html", matches=matches)
 
 
 @app.route("/u/<username>")

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Overlaps — Connecting Human Needs{% endblock %}
+
+{% block content %}
+  <div class="stream">
+    {% for m in matches %}
+      <article class="post">
+        <div class="post-meta">
+          <a href="{{ url_for('profile', username=m.username) }}">{{ m.username }}</a>
+          offers &ldquo;{{ m.offer }}&rdquo;
+        </div>
+        <div class="post-body">You mentioned needing: &ldquo;{{ m.need }}&rdquo;</div>
+      </article>
+    {% else %}
+      <p class="placeholder">No overlaps found yet — mention what you need in a bot conversation.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

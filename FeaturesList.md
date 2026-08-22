@@ -12,7 +12,7 @@
 - [x] Blocking: hide a blocked person's posts, profile, and gift wall from you, and stop their private messages to you — a personal filter, silent, never a platform-wide score or punishment.
 - [x] Bot framework: personas with stable names, avatars, specialties, and small prompts.
 - [x] Fact extraction: pull structured facts (city, offers, needs, channels used) from bot conversations into the database.
-- [ ] Overlap engine: plain database matching to find who has what someone else needs, and whether they're reachable to each other.
+- [x] Overlap engine: plain database matching to find who has what someone else needs, and whether they're reachable to each other.
 - [ ] Coordinator bots: reach out with a concrete match and a concrete next step.
 - [x] Welcome bot: explain the 9-out-of-10 culture and why this isn't money or barter.
 - [ ] Offsite routing: help a giver post somewhere real and point the receiver at it.
