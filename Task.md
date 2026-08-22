@@ -1,36 +1,29 @@
 # Feature Summary
 
-- [ ] Note passing: pass a note openly or quietly; the author is notified when it's redeemed, nobody else.
+- [ ] Profiles: show what a person has offered and passed along; never show what they've received.
 
 ## Description
 
-Finish the gift note lifecycle SiteShape.md laid out (steps 3-5: Passed, Redeemed, Expired-renewal), building on the Authored/Held steps the previous task built. From a held note, the current holder can either **pass** it on to someone else by username (removing it from their own held list, adding it to the next person's, still carrying the original author's name — same mechanic as authoring, just re-targeting an existing note instead of creating a new one) or **redeem** it (self-reported, one click). Redeeming is the *only* moment a note becomes public: it posts a single stream entry showing the note's title, the original author's username, and the redemption timestamp — reusing the existing `posts` table with a `kind` marker so the stream can tell a redemption post apart from a plain post (needed next for the shading distinction SiteShape.md describes, even though shading itself isn't built yet). Redemption also notifies the original author — "the author is notified when it's redeemed, nobody else" — and since private messaging doesn't exist yet, this task's stand-in for notification is a simple per-user notifications list surfaced in the header (a count/badge + a `/notifications` page), the same kind of minimal stand-in the Gift notes task used for "send to one person." Expired notes already silently drop out of `/notes` (previous task); this task adds the one-click **renew** SiteShape.md describes — re-authoring the same note (same title/description/contact/recipient... actually same original author, prompts for a fresh recipient since the old one no longer holds it) to send again.
+Build the public profile page from SiteShape.md ("Profiles"): every profile is public and reachable by clicking a username. It shows the username, a **gift wall** (chronological list of that person's notes that have been redeemed — i.e. gift_notes where `original_author_id` = them and `redeemed_at IS NOT NULL`), and a chronological list of their own posts to the stream (plain posts they authored, `posts.author_id` = them, excluding redemption posts since those aren't "their" post, they're a note's — same distinction index.html already draws by `kind`). Avatar is explicitly deferred (SiteShape.md: "avatar (deferred until the PNG identity feature lands)") — no image placeholder needed beyond maybe a plain circle, keep it simple. No commenting/posting on someone else's profile — read-only, per SiteShape.md. This task also makes usernames clickable everywhere they already appear (post author names, gift note "from X", notification text stays plain since it's private) so `/u/<username>` is actually reachable.
 
-- DB: `posts` gets a `kind` column (`'post'` default, or `'redemption'`); gift_notes gets no new columns — passing just updates `current_holder_id`, redeeming needs a `redeemed_at` marker so it can't be double-redeemed/passed after redemption, so add `redeemed_at` (nullable) to `gift_notes`.
-- DB: `notifications` table — id, user_id, message, created_at, read (bool) — a minimal stand-in for the eventual private-message-based notification, same spirit as Gift notes' recipient-by-username stand-in for full messaging.
-- `/notes/<id>/pass` — POST, current holder only, re-targets `current_holder_id` to a new username; 404/403 if not the current holder or already redeemed.
-- `/notes/<id>/redeem` — POST, current holder only; sets `redeemed_at`, inserts a `kind='redemption'` post, inserts a notification for the original author. Once redeemed, note drops out of anyone's held list (query should exclude redeemed notes same as expired ones).
-- `/notes/<id>/renew` — POST, original author only, on an expired note; creates a fresh gift_note with a new 30-day expiration to a newly-chosen recipient, same title/description/contact_info.
-- `/notifications` — logged-in user's notifications, newest first, marks them read on view.
-- Stream (`index.html`) distinguishes `kind='redemption'` posts visually (a distinct class, not yet real shading — SiteShape.md's green shading is still future work once distance/proximity exists) and their text is just "title — by original_author — redeemed" style, not a generic post body.
-- Header shows an unread-notifications indicator when logged in.
+- `/u/<username>` — public route, no login required (read access is universally open per Mission/SiteShape). 404-equivalent (simple "no such user" message) for an unknown username.
+- Gift wall section: title, redemption date, for every gift_note where this user is `original_author_id` and `redeemed_at` is set — newest redeemed first.
+- Posts section: this user's own plain posts (`kind='post'`), newest first — same post markup as the stream.
+- Never displays anything about notes they've received/held/passed — only what they've *given* (redeemed as original author) and *said* (posted), per Mission.md "Giving is visible, receiving is private."
+- Make `post.author_name` in the stream (`index.html`) and `note.original_author` in notes/redemption text link to `/u/<username>` where a username is available.
 
 ## To Do
 
-## Done
+- Add `/u/<username>` route + `profile.html` template: username header, gift wall (redeemed notes authored by them), their own plain posts.
+- Handle unknown username with a plain "no such user" message, no crash.
+- Link post author names in `index.html` to `/u/<username>`.
+- Link the redemption post's "originally offered by X" text to their profile too.
+- Style the profile page (simple: header row, gift wall list, posts list) consistent with existing pages.
+- Verify with a scripted test-client run: a user's redeemed-as-author notes show on their profile, their plain posts show, notes they merely hold/passed (not authored) never appear, an unknown username renders a clean "no such user" message instead of erroring, profile is reachable without being logged in.
 
-- Added `kind` column to `posts`, `redeemed_at` column to `gift_notes`, and a `notifications` table to schema.sql.
-- Added `/notes/<id>/pass` route: validates holder + not redeemed, updates current_holder_id to new recipient.
-- Added `/notes/<id>/redeem` route: validates holder + not redeemed, sets redeemed_at, inserts redemption post, inserts notification for original author.
-- Excluded redeemed notes from the `/notes` held-list query (alongside the existing expiry filter).
-- Added `/notes/<id>/renew` route: original-author-only, only for an expired note, prompts a new recipient, creates a fresh note.
-- Added `/notifications` route + template; marks viewed notifications read; header shows an unread count.
-- Updated `notes.html` to show Pass / Redeem forms per held note, and a Renew section for the author's own expired notes.
-- Updated `index.html` to render `kind='redemption'` posts distinctly from plain posts.
-- Verified with a scripted test-client run: pass moves a note from one holder's list to another's, redeem posts a public stream entry with the right text and removes the note from the holder's list, redeeming twice is a no-op (no duplicate announcement), a non-holder's pass/redeem attempts are no-ops, the original author (and only the original author) gets a notification on redemption, renew on an expired note creates a fresh 30-day note to a new recipient.
+## Done
 
 ## Details
 
-- Notifications here are a minimal stand-in (like Gift notes' recipient-by-username), not the real Private messaging feature — replace/fold in when that feature lands.
-- Redemption post text and the green-shading distinction are separate concerns: this task only needs the `kind` marker and a CSS class; actual proximity-based shading depends on location data that still doesn't exist (per SiteShape.md, deferred since Public feed).
-- "Passed" carries the *original* author's name forward, never the passer's — already modeled correctly since `original_author_id` never changes on pass, only `current_holder_id`.
+- Avatar is explicitly out of scope (deferred to the PNG identity feature per SiteShape.md) — don't build a placeholder image system now.
+- "Receiving is private" (Mission.md) — this is the one rule most worth re-checking carefully: a profile must never leak what notes someone is currently holding or has redeemed as a *holder* (only as the *original author* of a note that got redeemed does it show, and even then only title + date, matching the public redemption post's own visibility).
